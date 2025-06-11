@@ -1,6 +1,9 @@
 ## WMPR Requests Panel - Service Desk Footer
 ## Uses React component with atlas-kit for enhanced UI
 
+## Explicitly require the web resources for React components
+$webResourceManager.requireResource("com.example.wmpr.backend:wmpr-requests-table")
+
 <!-- Container for the React component with fallback -->
 <div id="wmpr-react-table" class="wmpr-react-container">
     <!-- React component will render here -->
@@ -93,8 +96,18 @@
     const maxRetries = 20; // Try for up to 10 seconds
     let fallbackMode = 'react'; // 'react', 'vanilla', 'basic'
     
+    // Enhanced debugging information
+    console.log('[WMPR Template] ===== INITIALIZATION DEBUG =====');
+    console.log('[WMPR Template] DOM ready state:', document.readyState);
+    console.log('[WMPR Template] Available globals:', Object.keys(window).filter(k => k.toLowerCase().includes('wmpr')));
+    console.log('[WMPR Template] React available:', typeof window.React);
+    console.log('[WMPR Template] ReactDOM available:', typeof window.ReactDOM);
+    console.log('[WMPR Template] AJS available:', typeof window.AJS);
+    
     function initWMPRReactComponent() {
         console.log('[WMPR Template] Initializing React component... (attempt ' + (retryCount + 1) + ')');
+        console.log('[WMPR Template] Checking for initWMPRRequestsTable function...');
+        console.log('[WMPR Template] Function type:', typeof window.initWMPRRequestsTable);
         
         // Check if the initialization function is available
         if (typeof window.initWMPRRequestsTable === 'function') {
@@ -112,15 +125,18 @@
                 console.log('[WMPR Template] React component initialized successfully');
             } catch (error) {
                 console.error('[WMPR Template] Error initializing React component:', error);
+                console.error('[WMPR Template] Error stack:', error.stack);
                 fallbackToVanillaJS();
             }
         } else {
             retryCount++;
             if (retryCount < maxRetries) {
                 console.warn('[WMPR Template] initWMPRRequestsTable function not found, retrying in 500ms... (' + retryCount + '/' + maxRetries + ')');
+                console.warn('[WMPR Template] Current window functions:', Object.keys(window).filter(k => typeof window[k] === 'function' && k.toLowerCase().includes('wmpr')));
                 setTimeout(initWMPRReactComponent, 500);
             } else {
                 console.error('[WMPR Template] Failed to find initWMPRRequestsTable function after ' + maxRetries + ' attempts');
+                console.error('[WMPR Template] Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('wmpr')));
                 fallbackToVanillaJS();
             }
         }
@@ -248,14 +264,17 @@
                     error: error.message || 'Component failed to initialize',
                     baseUrl: baseUrl,
                     initFunction: typeof window.initWMPRRequestsTable,
-                    fallbackMode: fallbackMode
+                    fallbackMode: fallbackMode,
+                    windowKeys: Object.keys(window).filter(k => k.toLowerCase().includes('wmpr'))
                 };
                 
                 basicFallback.innerHTML = '<div style="padding: 15px; background: #ffebe6; border: 1px solid #ff5630; border-radius: 3px; font-size: 12px; font-family: monospace;">' +
                     '<h4 style="margin: 0 0 10px 0; color: #bf2600;">WMPR Debug Information</h4>' +
                     '<strong>Error:</strong> ' + debugInfo.error + '<br>' +
                     '<strong>Fallback Mode:</strong> ' + debugInfo.fallbackMode + '<br>' +
-                    '<strong>Base URL:</strong> ' + debugInfo.baseUrl + '<br><br>' +
+                    '<strong>Base URL:</strong> ' + debugInfo.baseUrl + '<br>' +
+                    '<strong>Init Function:</strong> ' + debugInfo.initFunction + '<br>' +
+                    '<strong>WMPR Window Keys:</strong> ' + JSON.stringify(debugInfo.windowKeys) + '<br><br>' +
                     '<strong>Test these URLs manually:</strong><br>' +
                     '• <a href="' + baseUrl + '/rest/wmpr-requests/1.0/recent" target="_blank" style="color: #0052cc;">REST API</a><br>' +
                     '• <a href="' + baseUrl + '/plugins/servlet/upm" target="_blank" style="color: #0052cc;">Plugin Manager</a><br>' +
@@ -269,14 +288,17 @@
     if (typeof AJS !== 'undefined' && AJS.toInit) {
         AJS.toInit(function() {
             console.log('[WMPR Template] AJS initialized, starting React component...');
-            initWMPRReactComponent();
+            // Add a small delay to ensure web resources are loaded
+            setTimeout(initWMPRReactComponent, 100);
         });
     } else {
         // Fallback if AJS is not available
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initWMPRReactComponent);
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(initWMPRReactComponent, 100);
+            });
         } else {
-            initWMPRReactComponent();
+            setTimeout(initWMPRReactComponent, 100);
         }
     }
     
