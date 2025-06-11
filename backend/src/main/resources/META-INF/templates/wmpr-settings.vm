@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="decorator" content="atl.general">
+    <title>WMPR Settings - $projectName</title>
+    <style>
+        .wmpr-settings-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border: 1px solid #dfe1e6;
+            border-radius: 5px;
+        }
+        .wmpr-settings-form {
+            margin-top: 20px;
+        }
+        .wmpr-form-group {
+            margin-bottom: 20px;
+        }
+        .wmpr-form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #172b4d;
+        }
+        .wmpr-radio-group {
+            margin: 10px 0;
+        }
+        .wmpr-radio-option {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #dfe1e6;
+            border-radius: 3px;
+            background: #f4f5f7;
+        }
+        .wmpr-radio-option input[type="radio"] {
+            margin-right: 8px;
+        }
+        .wmpr-radio-option label {
+            font-weight: normal;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+        .wmpr-default-jql {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #42526e;
+        }
+        .wmpr-custom-jql {
+            width: 100%;
+            height: 80px;
+            margin-top: 8px;
+            padding: 8px;
+            border: 1px solid #dfe1e6;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+        .wmpr-buttons {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #dfe1e6;
+        }
+        .wmpr-button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            border: 1px solid #dfe1e6;
+            border-radius: 3px;
+            background: white;
+            color: #172b4d;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .wmpr-button-primary {
+            background: #0052cc;
+            color: white;
+            border-color: #0052cc;
+        }
+        .wmpr-button:hover {
+            background: #f4f5f7;
+        }
+        .wmpr-button-primary:hover {
+            background: #0065ff;
+        }
+        .wmpr-success-message {
+            background: #e3fcef;
+            border: 1px solid #36b37e;
+            color: #006644;
+            padding: 10px;
+            border-radius: 3px;
+            margin-bottom: 20px;
+        }
+        .wmpr-breadcrumb {
+            margin-bottom: 20px;
+            color: #626f86;
+            font-size: 12px;
+        }
+        .wmpr-breadcrumb a {
+            color: #0052cc;
+            text-decoration: none;
+        }
+    </style>
+    <script>
+        function toggleJqlInput() {
+            var customRadio = document.getElementById('jql-custom');
+            var customTextarea = document.getElementById('customJql');
+            
+            if (customRadio.checked) {
+                customTextarea.disabled = false;
+                customTextarea.focus();
+            } else {
+                customTextarea.disabled = true;
+            }
+        }
+        
+        function validateForm() {
+            var customRadio = document.getElementById('jql-custom');
+            var customJql = document.getElementById('customJql').value.trim();
+            
+            if (customRadio.checked && customJql === '') {
+                alert('Please enter a custom JQL query or select the default option.');
+                return false;
+            }
+            
+            return true;
+        }
+    </script>
+</head>
+<body>
+    <div class="wmpr-settings-container">
+        <div class="wmpr-breadcrumb">
+            <a href="/browse/$projectKey">$projectName</a> &gt; 
+            <a href="/plugins/servlet/project-config/$projectKey">Project Settings</a> &gt; 
+            WMPR Settings
+        </div>
+        
+        <h2>WMPR Settings for $projectName</h2>
+        <p>Configure how WMPR requests are displayed in the Service Desk portal.</p>
+        
+        #if($request.getParameter("saved"))
+        <div class="wmpr-success-message">
+            ✓ Settings saved successfully!
+        </div>
+        #end
+        
+        <form method="post" class="wmpr-settings-form" onsubmit="return validateForm()">
+            <input type="hidden" name="projectKey" value="$projectKey">
+            
+            <div class="wmpr-form-group">
+                <label>JQL Query Configuration:</label>
+                <p style="color: #626f86; font-size: 14px; margin-bottom: 15px;">
+                    Choose how to filter WMPR requests displayed in the portal.
+                </p>
+                
+                <div class="wmpr-radio-group">
+                    <div class="wmpr-radio-option">
+                        <label>
+                            <input type="radio" 
+                                   name="jqlOption" 
+                                   value="default" 
+                                   id="jql-default"
+                                   #if(!$useCustomJql)checked#end
+                                   onchange="toggleJqlInput()">
+                            Use Default JQL Query
+                        </label>
+                        <div class="wmpr-default-jql">$defaultJql</div>
+                    </div>
+                    
+                    <div class="wmpr-radio-option">
+                        <label>
+                            <input type="radio" 
+                                   name="jqlOption" 
+                                   value="custom" 
+                                   id="jql-custom"
+                                   #if($useCustomJql)checked#end
+                                   onchange="toggleJqlInput()">
+                            Use Custom JQL Query
+                        </label>
+                        <textarea name="customJql" 
+                                  id="customJql"
+                                  class="wmpr-custom-jql" 
+                                  placeholder="Enter your custom JQL query here..."
+                                  #if(!$useCustomJql)disabled#end>$currentJql</textarea>
+                        <small style="color: #626f86; display: block; margin-top: 5px;">
+                            Example: project = "MYPROJECT" AND status != "Done" ORDER BY created DESC
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="wmpr-buttons">
+                <input type="submit" value="Save Settings" class="wmpr-button wmpr-button-primary">
+                <a href="/plugins/servlet/project-config/$projectKey" class="wmpr-button">Cancel</a>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        // Initialize the form state
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleJqlInput();
+        });
+    </script>
+</body>
+</html> 

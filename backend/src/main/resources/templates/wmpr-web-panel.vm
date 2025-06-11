@@ -1,0 +1,285 @@
+## WMPR Requests Panel - Service Desk Footer
+## Uses React component with atlas-kit for enhanced UI
+
+<!-- Container for the React component with fallback -->
+<div id="wmpr-react-table" class="wmpr-react-container">
+    <!-- React component will render here -->
+    <div id="wmpr-loading-fallback" style="text-align: center; padding: 20px; color: #626f86;">
+        <div style="display: inline-block; width: 16px; height: 16px; border: 2px solid #0052cc; border-top: 2px solid transparent; border-radius: 50%; animation: wmpr-spin 1s linear infinite;"></div>
+        <p style="margin: 10px 0 0 0; font-size: 12px;">Loading WMPR requests...</p>
+    </div>
+    
+    <!-- Fallback HTML table (hidden by default) -->
+    <div id="wmpr-fallback-table" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px 0; border-bottom: 1px solid #dfe1e6;">
+            <h4 style="margin: 0; font-size: 14px; color: #172b4d;">Recent WMPR Service Desk Requests</h4>
+            <button id="wmpr-refresh-btn" style="padding: 4px 8px; font-size: 11px; background: #f4f5f7; border: 1px solid #dfe1e6; border-radius: 3px; cursor: pointer;">
+                Refresh
+            </button>
+        </div>
+        
+        <div id="wmpr-table-content">
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                <thead>
+                    <tr style="background: #f4f5f7; border-bottom: 1px solid #dfe1e6;">
+                        <th style="padding: 8px; text-align: left; font-weight: bold;">Request</th>
+                        <th style="padding: 8px; text-align: left; font-weight: bold;">Summary</th>
+                        <th style="padding: 8px; text-align: left; font-weight: bold;">Reporter</th>
+                        <th style="padding: 8px; text-align: left; font-weight: bold;">Created</th>
+                        <th style="padding: 8px; text-align: left; font-weight: bold;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="wmpr-table-body">
+                    <tr>
+                        <td colspan="5" style="padding: 20px; text-align: center; color: #626f86;">
+                            Loading requests...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Basic server-side fallback (visible if all else fails) -->
+    <div id="wmpr-basic-fallback" style="display: none; padding: 15px; background: #f4f5f7; border: 1px solid #dfe1e6; border-radius: 3px;">
+        <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #172b4d;">WMPR Requests</h4>
+        <p style="margin: 0; font-size: 12px; color: #626f86;">
+            Unable to load dynamic content. 
+            <a href="/rest/wmpr-requests/1.0/recent" target="_blank" style="color: #0052cc;">View raw data</a> or 
+            <a href="#" onclick="window.location.reload(); return false;" style="color: #0052cc;">reload page</a>.
+        </p>
+    </div>
+</div>
+
+<style>
+/* Loading animation for fallback */
+@keyframes wmpr-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced container styling */
+.wmpr-react-container {
+    margin: 20px 0;
+    background: #ffffff;
+    border: 1px solid #dfe1e6;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Hide fallback loading when React component loads */
+.wmpr-react-container.react-loaded #wmpr-loading-fallback {
+    display: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .wmpr-react-container {
+        margin: 15px 0;
+        padding: 15px;
+        border-radius: 6px;
+    }
+}
+</style>
+
+<script type="text/javascript">
+// Initialize the React component when the page loads
+(function() {
+    'use strict';
+    
+    let retryCount = 0;
+    const maxRetries = 20; // Try for up to 10 seconds
+    let fallbackMode = 'react'; // 'react', 'vanilla', 'basic'
+    
+    function initWMPRReactComponent() {
+        console.log('[WMPR Template] Initializing React component... (attempt ' + (retryCount + 1) + ')');
+        
+        // Check if the initialization function is available
+        if (typeof window.initWMPRRequestsTable === 'function') {
+            try {
+                console.log('[WMPR Template] Found initWMPRRequestsTable function, initializing...');
+                // Initialize the React component
+                window.initWMPRRequestsTable('wmpr-react-table');
+                
+                // Mark container as loaded
+                const container = document.getElementById('wmpr-react-table');
+                if (container) {
+                    container.classList.add('react-loaded');
+                }
+                
+                console.log('[WMPR Template] React component initialized successfully');
+            } catch (error) {
+                console.error('[WMPR Template] Error initializing React component:', error);
+                fallbackToVanillaJS();
+            }
+        } else {
+            retryCount++;
+            if (retryCount < maxRetries) {
+                console.warn('[WMPR Template] initWMPRRequestsTable function not found, retrying in 500ms... (' + retryCount + '/' + maxRetries + ')');
+                setTimeout(initWMPRReactComponent, 500);
+            } else {
+                console.error('[WMPR Template] Failed to find initWMPRRequestsTable function after ' + maxRetries + ' attempts');
+                fallbackToVanillaJS();
+            }
+        }
+    }
+    
+    function fallbackToVanillaJS() {
+        console.log('[WMPR Template] Falling back to vanilla JavaScript implementation');
+        fallbackMode = 'vanilla';
+        
+        // Hide loading indicator
+        const loadingElement = document.getElementById('wmpr-loading-fallback');
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
+        
+        // Show fallback table
+        const fallbackTable = document.getElementById('wmpr-fallback-table');
+        if (fallbackTable) {
+            fallbackTable.style.display = 'block';
+        }
+        
+        // Load data with vanilla JS
+        loadWMPRDataVanilla();
+        
+        // Setup refresh button
+        const refreshBtn = document.getElementById('wmpr-refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', loadWMPRDataVanilla);
+        }
+    }
+    
+    function loadWMPRDataVanilla() {
+        console.log('[WMPR Template] Loading data with vanilla JavaScript');
+        
+        const tableBody = document.getElementById('wmpr-table-body');
+        if (!tableBody) return;
+        
+        // Show loading state
+        tableBody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #626f86;">Loading requests...</td></tr>';
+        
+        // Make AJAX request
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/rest/wmpr-requests/1.0/recent', true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        renderVanillaTable(data);
+                    } catch (error) {
+                        console.error('[WMPR Template] Error parsing response:', error);
+                        showBasicFallback();
+                    }
+                } else {
+                    console.error('[WMPR Template] API request failed:', xhr.status, xhr.statusText);
+                    showBasicFallback();
+                }
+            }
+        };
+        xhr.send();
+    }
+    
+    function renderVanillaTable(data) {
+        const tableBody = document.getElementById('wmpr-table-body');
+        if (!tableBody) return;
+        
+        const requests = Array.isArray(data) ? data : (data.data || []);
+        
+        if (requests.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #626f86;">No recent WMPR requests found.</td></tr>';
+            return;
+        }
+        
+        var html = '';
+        for (var i = 0; i < requests.length; i++) {
+            var request = requests[i];
+            var statusColor = getStatusColor(request.statusCategory);
+            var formattedDate = new Date(request.created).toLocaleDateString();
+            
+            html += '<tr style="border-bottom: 1px solid #f4f5f7;">';
+            html += '<td style="padding: 8px;"><a href="/browse/' + request.key + '" target="_blank" style="color: #0052cc; text-decoration: none; font-weight: bold;">' + request.key + '</a></td>';
+            html += '<td style="padding: 8px;" title="' + request.summary + '">' + (request.summary.length > 50 ? request.summary.substring(0, 50) + '...' : request.summary) + '</td>';
+            html += '<td style="padding: 8px;">' + request.reporter + '</td>';
+            html += '<td style="padding: 8px;">' + formattedDate + '</td>';
+            html += '<td style="padding: 8px;"><span style="background: ' + statusColor + '; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px;">' + request.status + '</span></td>';
+            html += '</tr>';
+        }
+        
+        tableBody.innerHTML = html;
+        console.log('[WMPR Template] Vanilla table rendered with ' + requests.length + ' requests');
+    }
+    
+    function getStatusColor(category) {
+        switch ((category || '').toLowerCase()) {
+            case 'done': return '#36b37e';
+            case 'indeterminate': return '#0052cc';
+            case 'new': return '#ff5630';
+            default: return '#6b778c';
+        }
+    }
+    
+    function showBasicFallback() {
+        console.log('[WMPR Template] Showing basic fallback');
+        fallbackMode = 'basic';
+        
+        // Hide other elements
+        const loadingElement = document.getElementById('wmpr-loading-fallback');
+        const fallbackTable = document.getElementById('wmpr-fallback-table');
+        const basicFallback = document.getElementById('wmpr-basic-fallback');
+        
+        if (loadingElement) loadingElement.style.display = 'none';
+        if (fallbackTable) fallbackTable.style.display = 'none';
+        if (basicFallback) basicFallback.style.display = 'block';
+    }
+    
+    function showFallbackError(error) {
+        // This function is now mainly for debugging in basic fallback mode
+        console.error('[WMPR Template] Fallback error:', error);
+        
+        if (fallbackMode === 'basic') {
+            const basicFallback = document.getElementById('wmpr-basic-fallback');
+            if (basicFallback) {
+                const baseUrl = window.location.origin;
+                const debugInfo = {
+                    error: error.message || 'Component failed to initialize',
+                    baseUrl: baseUrl,
+                    initFunction: typeof window.initWMPRRequestsTable,
+                    fallbackMode: fallbackMode
+                };
+                
+                basicFallback.innerHTML = '<div style="padding: 15px; background: #ffebe6; border: 1px solid #ff5630; border-radius: 3px; font-size: 12px; font-family: monospace;">' +
+                    '<h4 style="margin: 0 0 10px 0; color: #bf2600;">WMPR Debug Information</h4>' +
+                    '<strong>Error:</strong> ' + debugInfo.error + '<br>' +
+                    '<strong>Fallback Mode:</strong> ' + debugInfo.fallbackMode + '<br>' +
+                    '<strong>Base URL:</strong> ' + debugInfo.baseUrl + '<br><br>' +
+                    '<strong>Test these URLs manually:</strong><br>' +
+                    '• <a href="' + baseUrl + '/rest/wmpr-requests/1.0/recent" target="_blank" style="color: #0052cc;">REST API</a><br>' +
+                    '• <a href="' + baseUrl + '/plugins/servlet/upm" target="_blank" style="color: #0052cc;">Plugin Manager</a><br>' +
+                    '<br><button onclick="window.location.reload(); return false;" style="background: #0052cc; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Reload Page</button>' +
+                    '</div>';
+            }
+        }
+    }
+    
+    // Initialize when DOM is ready
+    if (typeof AJS !== 'undefined' && AJS.toInit) {
+        AJS.toInit(function() {
+            console.log('[WMPR Template] AJS initialized, starting React component...');
+            initWMPRReactComponent();
+        });
+    } else {
+        // Fallback if AJS is not available
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initWMPRReactComponent);
+        } else {
+            initWMPRReactComponent();
+        }
+    }
+    
+    console.log('[WMPR Template] Initialization script loaded');
+})();
+</script> 
