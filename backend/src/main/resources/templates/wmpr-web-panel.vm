@@ -1,8 +1,8 @@
 ## WMPR Requests Panel - Service Desk Footer
 ## Uses React component with atlas-kit for enhanced UI
 
-## Explicitly require the web resources for React components
-$webResourceManager.requireResource("com.example.wmpr.backend:wmpr-requests-table")
+## Explicitly require the web resources for React components (using auto-generated key)
+$webResourceManager.requireResource("com.example.wmpr.backend:entrypoint-wmprRequestsTable")
 
 <!-- Container for the React component with fallback -->
 <div id="wmpr-react-table" class="wmpr-react-container">
