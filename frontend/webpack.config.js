@@ -56,11 +56,11 @@ module.exports = (_, { mode }) => {
             usedExports: true,
             sideEffects: false
         } : {},
-        // External dependencies (leverage Jira's built-in libraries)
-        externals: {
-            'react': 'React',
-            'react-dom': 'ReactDOM'
-        },
+        // Remove externals - we want to bundle React and ReactDOM
+        // externals: {
+        //     'react': 'React',
+        //     'react-dom': 'ReactDOM'
+        // },
         plugins: [
             new WrmPlugin({
                 watch,
@@ -70,15 +70,11 @@ module.exports = (_, { mode }) => {
                 contextMap: {
                     'wmprRequestsTable': 'servicedesk.portal.footer'
                 },
-                // External web resources that Jira already provides
+                // Jira provides AJS and jQuery - we can use these as externals
                 providedDependencies: {
-                    'react': {
-                        dependency: 'jira.webresources:util',
-                        import: 'React'
-                    },
-                    'react-dom': {
-                        dependency: 'jira.webresources:util', 
-                        import: 'ReactDOM'
+                    'AJS': {
+                        dependency: 'com.atlassian.auiplugin:ajs',
+                        import: 'AJS'
                     }
                 }
             }),
@@ -86,13 +82,17 @@ module.exports = (_, { mode }) => {
         output: {
             filename: isProduction ? 'bundled.[name].[contenthash:8].js' : 'bundled.[name].js',
             path: path.resolve("../backend/src/main/resources/frontend"),
+            // Ensure our function is exposed globally
+            library: {
+                type: 'window',
+            },
             // Ensure proper chunk loading
             chunkLoadingGlobal: 'webpackChunkWMPR'
         },
         // Performance budgets to catch large bundles
         performance: {
-            maxAssetSize: 250000, // 250KB limit
-            maxEntrypointSize: 400000, // Increased for multiple chunks
+            maxAssetSize: 500000, // Increased to 500KB to accommodate React bundle
+            maxEntrypointSize: 800000, // Increased for React + AtlasKit
             hints: 'warning'
         }
     };

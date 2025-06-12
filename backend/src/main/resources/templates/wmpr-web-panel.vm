@@ -1,8 +1,8 @@
 ## WMPR Requests Panel - Service Desk Footer
 ## Uses React component with atlas-kit for enhanced UI
 
-## Explicitly require the web resources for React components (using auto-generated key)
-$webResourceManager.requireResource("com.example.wmpr.backend:entrypoint-wmprRequestsTable")
+## Web resources are loaded automatically via web-panel dependencies
+## No need to manually require - this can cause conflicts
 
 <!-- Container for the React component with fallback -->
 <div id="wmpr-react-table" class="wmpr-react-container">
@@ -93,7 +93,7 @@ $webResourceManager.requireResource("com.example.wmpr.backend:entrypoint-wmprReq
     'use strict';
     
     let retryCount = 0;
-    const maxRetries = 20; // Try for up to 10 seconds
+    const maxRetries = 30; // Try for up to 15 seconds
     let fallbackMode = 'react'; // 'react', 'vanilla', 'basic'
     
     // Enhanced debugging information
@@ -123,10 +123,12 @@ $webResourceManager.requireResource("com.example.wmpr.backend:entrypoint-wmprReq
                 }
                 
                 console.log('[WMPR Template] React component initialized successfully');
+                return true; // Success
             } catch (error) {
                 console.error('[WMPR Template] Error initializing React component:', error);
                 console.error('[WMPR Template] Error stack:', error.stack);
                 fallbackToVanillaJS();
+                return false;
             }
         } else {
             retryCount++;
@@ -134,10 +136,12 @@ $webResourceManager.requireResource("com.example.wmpr.backend:entrypoint-wmprReq
                 console.warn('[WMPR Template] initWMPRRequestsTable function not found, retrying in 500ms... (' + retryCount + '/' + maxRetries + ')');
                 console.warn('[WMPR Template] Current window functions:', Object.keys(window).filter(k => typeof window[k] === 'function' && k.toLowerCase().includes('wmpr')));
                 setTimeout(initWMPRReactComponent, 500);
+                return false;
             } else {
                 console.error('[WMPR Template] Failed to find initWMPRRequestsTable function after ' + maxRetries + ' attempts');
                 console.error('[WMPR Template] Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('wmpr')));
                 fallbackToVanillaJS();
+                return false;
             }
         }
     }
@@ -288,17 +292,17 @@ $webResourceManager.requireResource("com.example.wmpr.backend:entrypoint-wmprReq
     if (typeof AJS !== 'undefined' && AJS.toInit) {
         AJS.toInit(function() {
             console.log('[WMPR Template] AJS initialized, starting React component...');
-            // Add a small delay to ensure web resources are loaded
-            setTimeout(initWMPRReactComponent, 100);
+            // Add a longer delay to ensure web resources are fully loaded
+            setTimeout(initWMPRReactComponent, 1000);
         });
     } else {
         // Fallback if AJS is not available
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(initWMPRReactComponent, 100);
+                setTimeout(initWMPRReactComponent, 1000);
             });
         } else {
-            setTimeout(initWMPRReactComponent, 100);
+            setTimeout(initWMPRReactComponent, 1000);
         }
     }
     
