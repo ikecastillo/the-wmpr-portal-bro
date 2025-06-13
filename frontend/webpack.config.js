@@ -75,7 +75,7 @@ module.exports = (_, { mode }) => {
                 pluginKey: 'com.example.wmpr.backend',
                 xmlDescriptors: xmlOutPath,
                 contextMap: {
-                    'wmprRequestsTable': 'atl.general'  // Changed from servicedesk.portal.footer
+                    'wmprRequestsTable': ['servicedesk.portal.footer', 'atl.general']  // Load in both contexts
                 },
                 // Jira provides these dependencies
                 providedDependencies: {

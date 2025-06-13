@@ -14,6 +14,17 @@
         <small style="color: #999; font-size: 10px;">IKKKKKKE-TEMPLATE-051: Loading Fallback Active</small>
     </div>
     
+    <!-- DEBUG: Add immediate visibility for testing -->
+    <div id="wmpr-debug-info" style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 10px 0; font-size: 10px; font-family: monospace;">
+        <strong>WMPR Debug Info (Remove in production):</strong><br>
+        <span id="debug-timestamp">Loading... IKKKKKKE-DEBUG-001</span><br>
+        <span id="debug-context">Context: Unknown</span><br>
+        <span id="debug-resources">Web Resources: Loading...</span><br>
+        <span id="debug-react">React: Checking...</span><br>
+        <span id="debug-bundle">Bundle: Not Found</span><br>
+        <span id="debug-init">Init Function: Not Found</span>
+    </div>
+    
     <!-- Fallback HTML table (hidden by default) -->
     <div id="wmpr-fallback-table" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px 0; border-bottom: 1px solid #dfe1e6;">
@@ -319,5 +330,93 @@ console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
     }
     
     console.log('[IKKKKKKE-TEMPLATE-094] Initialization script loaded and configured');
+    
+    // CRITICAL DEBUG: Add immediate debugging that runs right away
+    (function immediateDebug() {
+        console.log('[IKKKKKKE-DEBUG-001] ===== IMMEDIATE DEBUG CHECK =====');
+        
+        // Update debug UI
+        function updateDebugUI(id, message) {
+            const element = document.getElementById(id);
+            if (element) element.textContent = message;
+        }
+        
+        updateDebugUI('debug-timestamp', new Date().toISOString() + ' - IKKKKKKE-DEBUG-002');
+        updateDebugUI('debug-context', 'Service Desk Portal - IKKKKKKE-DEBUG-003');
+        
+        // Check for available resources
+        const resourceChecks = {
+            'React (window.React)': typeof window.React,
+            'ReactDOM (window.ReactDOM)': typeof window.ReactDOM,
+            'AJS (window.AJS)': typeof window.AJS,
+            'WMPR (window.WMPR)': typeof window.WMPR,
+            'initWMPRRequestsTable': typeof window.initWMPRRequestsTable,
+            'jQuery ($)': typeof window.$
+        };
+        
+        console.log('[IKKKKKKE-DEBUG-004] Available Resources:', resourceChecks);
+        updateDebugUI('debug-resources', Object.keys(resourceChecks).map(k => k + ': ' + resourceChecks[k]).join(', '));
+        
+        // Check React specifically
+        if (typeof window.React !== 'undefined') {
+            updateDebugUI('debug-react', 'React Available v' + (window.React.version || 'unknown') + ' - IKKKKKKE-DEBUG-005');
+        } else {
+            updateDebugUI('debug-react', 'React NOT AVAILABLE - IKKKKKKE-DEBUG-006');
+        }
+        
+        // Check our bundle
+        if (typeof window.WMPR !== 'undefined') {
+            updateDebugUI('debug-bundle', 'WMPR Bundle Found - IKKKKKKE-DEBUG-007');
+        } else if (typeof window.initWMPRRequestsTable !== 'undefined') {
+            updateDebugUI('debug-bundle', 'Init Function Found (direct) - IKKKKKKE-DEBUG-008');
+        } else {
+            updateDebugUI('debug-bundle', 'NO WMPR Bundle Found - IKKKKKKE-DEBUG-009');
+        }
+        
+        // Check init function
+        if (typeof window.initWMPRRequestsTable === 'function') {
+            updateDebugUI('debug-init', 'Init Function Available - IKKKKKKE-DEBUG-010');
+            console.log('[IKKKKKKE-DEBUG-011] Function signature:', window.initWMPRRequestsTable.toString().substring(0, 200));
+        } else {
+            updateDebugUI('debug-init', 'Init Function NOT FOUND - IKKKKKKE-DEBUG-012');
+        }
+        
+        // List all window properties containing 'wmpr' or 'WMPR'
+        const wmprProperties = Object.keys(window).filter(k => 
+            k.toLowerCase().includes('wmpr') || k.toLowerCase().includes('react')
+        );
+        console.log('[IKKKKKKE-DEBUG-013] WMPR/React related window properties:', wmprProperties);
+        
+        // Try to detect if web resources are loading
+        const scripts = Array.from(document.scripts);
+        const wmprScripts = scripts.filter(s => s.src && s.src.includes('wmpr'));
+        console.log('[IKKKKKKE-DEBUG-014] WMPR Scripts Found:', wmprScripts.map(s => s.src));
+        
+        // Check for any AtlasKit resources
+        const atlaskitScripts = scripts.filter(s => s.src && s.src.includes('atlaskit'));
+        console.log('[IKKKKKKE-DEBUG-015] AtlasKit Scripts Found:', atlaskitScripts.length);
+        
+        // Check if we're in the right context
+        console.log('[IKKKKKKE-DEBUG-016] Current URL:', window.location.href);
+        console.log('[IKKKKKKE-DEBUG-017] Page pathname:', window.location.pathname);
+        
+        // Set up a periodic check to see when resources become available
+        let checkCount = 0;
+        const resourceChecker = setInterval(() => {
+            checkCount++;
+            const newCheck = typeof window.initWMPRRequestsTable;
+            if (newCheck === 'function') {
+                console.log('[IKKKKKKE-DEBUG-018] Init function became available after', checkCount * 500, 'ms');
+                updateDebugUI('debug-init', 'Init Function Available (delayed) - IKKKKKKE-DEBUG-019');
+                clearInterval(resourceChecker);
+            } else if (checkCount > 120) { // 60 seconds
+                console.log('[IKKKKKKE-DEBUG-020] Giving up after 60 seconds - init function never appeared');
+                updateDebugUI('debug-init', 'Init Function TIMEOUT - IKKKKKKE-DEBUG-021');
+                clearInterval(resourceChecker);
+            }
+        }, 500);
+        
+        console.log('[IKKKKKKE-DEBUG-022] ===== IMMEDIATE DEBUG CHECK COMPLETE =====');
+    })();
 })();
 </script> 

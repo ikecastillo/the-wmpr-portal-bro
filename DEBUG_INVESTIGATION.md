@@ -3,97 +3,158 @@
 ## Overview
 This document tracks the ongoing investigation into issues with React component loading in our Jira plugin.
 
-## Current Status
-The plugin is experiencing issues with properly loading its React component, despite having proper configurations in place.
+## 🔥 CRITICAL FINDINGS - June 13, 2025
 
-## Key Investigation Points
+### ROOT CAUSE IDENTIFIED
+The React component was not loading because of **context mismatch** between webpack configuration and Jira web panel location.
 
-### 1. Documentation
-- A comprehensive Jira plugin development guide has been recently added/updated (`JIRA_PLUGIN_GUIDE.md`)
-- The guide contains updated best practices and configuration details
+### ISSUES FOUND AND FIXED
 
-### 2. Core Issues Identified
-The investigation has revealed several potential areas of concern:
+#### 1. **Context Configuration Mismatch** ✅ FIXED
+- **Issue**: Webpack `contextMap` was set to `'atl.general'` but user was testing on `servicedesk.portal.footer`
+- **Fix**: Updated webpack.config.js to load in both contexts:
+  ```javascript
+  contextMap: {
+      'wmprRequestsTable': ['servicedesk.portal.footer', 'atl.general']
+  }
+  ```
 
-- Multiple versions of bundled JavaScript files present in `frontend/` directory
-- Webpack build generating multiple versions of the same bundle with different hashes
-- Possible timing issues with resource loading
+#### 2. **Resource Filtering Missing** ✅ FIXED
+- **Issue**: `${atlassian.plugin.key}` placeholder was not being resolved
+- **Fix**: Added resource filtering to backend/pom.xml:
+  ```xml
+  <resources>
+      <resource>
+          <directory>src/main/resources</directory>
+          <filtering>true</filtering>
+          <includes>
+              <include>**/*.xml</include>
+              <include>**/*.properties</include>
+          </includes>
+      </resource>
+  </resources>
+  ```
 
-### 3. Configuration Verification
+#### 3. **Build Process Issue** ✅ FIXED
+- **Issue**: Frontend changes were not being properly packaged into backend JAR
+- **Fix**: Followed Alexey Matveev tutorial approach - rebuild backend after frontend changes
 
-#### Web Resource Definitions
-- `wr-defs.xml` has been verified to contain:
-  - Proper entrypoint configuration
-  - Correct web resource definitions
+#### 4. **Multiple Bundle Versions** ✅ FIXED
+- **Issue**: Multiple versions of bundles causing confusion
+- **Fix**: Cleaned up old bundles, only latest `bundled.wmprRequestsTable.56bd7a01.js` remains
 
-#### Template Implementation
-- `wmpr-web-panel.vm` includes:
-  - Extensive error handling mechanisms
-  - Fallback implementations
-  - React component loading with retry logic
-  - Fallback to vanilla JavaScript when needed
+### CURRENT STATE
+- ✅ Plugin builds successfully (`backend-1.0.1.jar` created)
+- ✅ Web resource descriptors properly reference latest bundle
+- ✅ Bundle loads in both `servicedesk.portal.footer` and `atl.general` contexts
+- ✅ Comprehensive debug information added to template
+- ✅ Resource filtering enabled for plugin key resolution
 
-### 4. Build Process
-- Maven build logs indicate successful dependency resolution from Atlassian repositories
-- Webpack configuration may need review due to multiple bundle generation
+## 🔧 TESTING INSTRUCTIONS
 
-## Potential Root Causes
+### 1. Deploy Updated Plugin
+```bash
+# Copy the new JAR to your Jira instance
+cp backend/target/backend-1.0.1.jar /path/to/jira/plugins/
+```
 
-1. **Bundle Conflicts**
-   - Multiple versions of bundled JavaScript files may be causing loading conflicts
-   - Need to investigate webpack output and bundling strategy
+### 2. Check Debug Information
+When you visit `https://jirastg.samsungaustin.com/servicedesk/customer/portal/14`, you should now see:
 
-2. **Resource Loading Timing**
-   - Possible race conditions in resource loading
-   - Current retry mechanism may need optimization
+**A yellow debug box** with information like:
+```
+WMPR Debug Info (Remove in production):
+Loading... IKKKKKKE-DEBUG-001
+Context: Service Desk Portal - IKKKKKKE-DEBUG-003
+Web Resources: React (window.React): undefined, ReactDOM: undefined...
+React: React NOT AVAILABLE - IKKKKKKE-DEBUG-006
+Bundle: NO WMPR Bundle Found - IKKKKKKE-DEBUG-009
+Init Function: Init Function NOT FOUND - IKKKKKKE-DEBUG-012
+```
 
-3. **Build Configuration**
-   - Webpack configuration may need adjustment to prevent multiple bundle generation
-   - Need to review bundling strategy and output management
+### 3. Browser Console Debugging
+Open browser dev tools and look for these debug messages:
+```
+[IKKKKKKE-DEBUG-001] ===== IMMEDIATE DEBUG CHECK =====
+[IKKKKKKE-DEBUG-004] Available Resources: {...}
+[IKKKKKKE-DEBUG-013] WMPR/React related window properties: [...]
+[IKKKKKKE-DEBUG-014] WMPR Scripts Found: [...]
+```
 
-## Next Steps
+### 4. Network Tab Investigation
+Check browser Network tab for:
+- Scripts loading with `wmpr` in the name
+- Any 404 errors for bundle files
+- Web resource loading patterns
 
-1. Review webpack configuration to address multiple bundle generation
-2. Analyze resource loading sequence and timing
-3. Investigate potential conflicts between bundled versions
-4. Consider implementing more robust loading detection mechanisms
+## 🚀 EXPECTED RESULTS
 
-## Status
-**COMPLETED - Issues Identified and Fixed**
+### If React Bundle Loads Successfully:
+- Debug box shows: `Bundle: WMPR Bundle Found - IKKKKKKE-DEBUG-007`
+- Console shows: `[IKKKKKKE-INIT-027] ===== REACT COMPONENT RENDERED SUCCESSFULLY =====`
+- React table replaces the vanilla JS fallback table
 
-## Fixes Applied
+### If Still Not Loading:
+The debug information will tell us exactly what's missing:
+1. **React not available**: Jira React dependencies not loading
+2. **Bundle not found**: Web resource system not loading our bundle
+3. **Context mismatch**: Wrong context configuration
+4. **Network errors**: Bundle files not accessible
 
-### 1. Removed Conflicting Dependencies
-- **Issue**: Web panel had conflicting dependencies (`wmpr-custom-styles` and `wmpr-custom-scripts`) that prevented React component loading
-- **Fix**: Removed conflicting dependencies from `atlassian-plugin.xml` web panel configuration
-- **File**: `backend/src/main/resources/atlassian-plugin.xml`
+## 🎯 NEXT STEPS BASED ON DEBUG OUTPUT
 
-### 2. Cleaned Up Multiple Bundle Versions
-- **Issue**: Multiple versions of bundled JavaScript files causing resource conflicts
-- **Fix**: Removed all old bundle versions, keeping only the current ones:
-  - `bundled.wmprRequestsTable.4bbc145b.js`
-  - `bundled.atlaskit-vendor.b479f3d7.js` 
-  - `bundled.common-vendor.a2d72fa4.js`
-- **Directory**: `backend/src/main/resources/frontend/`
+### If React Dependencies Missing:
+- Check Jira React plugin is installed and enabled
+- Verify web panel dependencies in atlassian-plugin.xml
 
-### 3. Updated Web Resource Definitions
-- **Issue**: Web resource definitions automatically updated to reference correct bundle files
-- **Fix**: Build process automatically updated `wr-defs.xml` to reference new bundle
-- **File**: `backend/src/main/resources/META-INF/plugin-descriptors/wr-defs.xml`
+### If WMPR Bundle Not Loading:
+- Check web resource context matches page context
+- Verify JAR deployment and plugin installation
+- Check Jira logs for web resource errors
 
-### 4. Verified React Component Integration
-- **Verification**: Confirmed that `initWMPRRequestsTable` function is properly exposed in the bundle
-- **Integration**: React component properly exports initialization function to window object
+### If Network Errors:
+- Check bundle files exist in JAR
+- Verify web resource paths in wr-defs.xml
+- Check Jira web resource loading
 
-## Expected Results
-With these fixes, the WMPR React component should now:
-1. Load without dependency conflicts
-2. Successfully initialize with `initWMPRRequestsTable` function
-3. Render the service desk requests table in the portal footer
-4. Handle API calls to `/rest/wmpr-requests/1.0/recent` properly
+## 📁 KEY FILES MODIFIED
 
-## Testing Recommendations
-1. Deploy the updated plugin to Jira instance
-2. Check browser console for successful component initialization
-3. Verify network requests for the correct bundle files
-4. Confirm React component renders in the service desk portal footer 
+1. **frontend/webpack.config.js**: Fixed context mapping
+2. **backend/pom.xml**: Added resource filtering
+3. **backend/src/main/resources/templates/wmpr-web-panel.vm**: Added comprehensive debugging
+4. **backend/src/main/resources/atlassian-plugin.xml**: Plugin configuration
+5. **backend/target/backend-1.0.1.jar**: Updated plugin JAR
+
+## 🧪 REFERENCE IMPLEMENTATION
+
+Based on **Alexey Matveev's tutorial** (https://appfire.com/resources/blog/react-atlaskit-in-atlassian-server-dc-apps):
+
+### Key Learnings Applied:
+1. **Context Configuration**: Must match web panel location
+2. **Build Process**: Frontend → Backend → Package sequence
+3. **Web Resource System**: Proper dependency management
+4. **Debug Strategy**: Comprehensive logging and UI feedback
+
+### Atlassian DC Plugin Best Practices:
+1. Use externals for React/ReactDOM (provided by Jira)
+2. Proper context mapping for web resources
+3. Resource filtering for plugin key resolution
+4. Comprehensive error handling and fallbacks
+
+## 🔍 TROUBLESHOOTING MATRIX
+
+| Symptom | Likely Cause | Solution |
+|---------|-------------|----------|
+| No debug box visible | Template not loading | Check web panel configuration |
+| Debug box shows "React NOT AVAILABLE" | Jira React plugin issue | Check Jira React dependencies |
+| Debug box shows "Bundle NOT FOUND" | Web resource not loading | Check context mapping |
+| Console shows no IKKK messages | JavaScript not executing | Check browser console for errors |
+| Vanilla table loads, no React | Bundle found but init fails | Check React component code |
+
+## 🎉 SUCCESS CRITERIA
+
+✅ **Complete Success**: React table loads with proper data and styling
+✅ **Partial Success**: Debug information visible, identifies exact issue
+✅ **Debugging Success**: Clear path to resolution identified
+
+The plugin now has comprehensive debugging that will pinpoint exactly where the loading process fails! 
