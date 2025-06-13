@@ -1,5 +1,6 @@
 const path = require('path');
 const WrmPlugin = require('atlassian-webresource-webpack-plugin');
+const webpack = require('webpack');
 
 const xmlOutPath = path.resolve(
     '..', 'backend', 'src', 'main', 'resources', 'META-INF', 'plugin-descriptors', 'wr-defs.xml'
@@ -56,25 +57,39 @@ module.exports = (_, { mode }) => {
             usedExports: true,
             sideEffects: false
         } : {},
-        // Remove externals - we want to bundle React and ReactDOM
-        // externals: {
-        //     'react': 'React',
-        //     'react-dom': 'ReactDOM'
-        // },
+        // Configure externals for Jira-provided dependencies
+        externals: {
+            'react': 'React',
+            'react-dom': 'ReactDOM'
+        },
         plugins: [
+            // Add tracking identifier banner
+            new webpack.BannerPlugin({
+                banner: 'IKKKKKKE-WEBPACK-BUILD-001 - WMPR Bundle Loading Check',
+                raw: false,
+                entryOnly: true
+            }),
             new WrmPlugin({
                 watch,
                 locationPrefix: 'frontend/',
                 pluginKey: 'com.example.wmpr.backend',
                 xmlDescriptors: xmlOutPath,
                 contextMap: {
-                    'wmprRequestsTable': 'servicedesk.portal.footer'
+                    'wmprRequestsTable': 'atl.general'  // Changed from servicedesk.portal.footer
                 },
-                // Jira provides AJS and jQuery - we can use these as externals
+                // Jira provides these dependencies
                 providedDependencies: {
                     'AJS': {
                         dependency: 'com.atlassian.auiplugin:ajs',
                         import: 'AJS'
+                    },
+                    'React': {
+                        dependency: 'com.atlassian.jira.plugins.jira-react-plugin:react',
+                        import: 'React'
+                    },
+                    'ReactDOM': {
+                        dependency: 'com.atlassian.jira.plugins.jira-react-plugin:react',
+                        import: 'ReactDOM'
                     }
                 }
             }),
@@ -82,17 +97,19 @@ module.exports = (_, { mode }) => {
         output: {
             filename: isProduction ? 'bundled.[name].[contenthash:8].js' : 'bundled.[name].js',
             path: path.resolve("../backend/src/main/resources/frontend"),
-            // Ensure our function is exposed globally
+            // CRITICAL FIX: Properly expose our initialization function
             library: {
+                name: 'WMPR',
                 type: 'window',
+                export: 'default'
             },
             // Ensure proper chunk loading
             chunkLoadingGlobal: 'webpackChunkWMPR'
         },
         // Performance budgets to catch large bundles
         performance: {
-            maxAssetSize: 500000, // Increased to 500KB to accommodate React bundle
-            maxEntrypointSize: 800000, // Increased for React + AtlasKit
+            maxAssetSize: 300000, // Reduced since we're using externals
+            maxEntrypointSize: 500000, 
             hints: 'warning'
         }
     };

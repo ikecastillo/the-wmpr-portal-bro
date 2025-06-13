@@ -4,18 +4,21 @@
 ## Web resources are loaded automatically via web-panel dependencies
 ## No need to manually require - this can cause conflicts
 
+<!-- IKKKKKKE-TEMPLATE-050 - Velocity Template Loading Check -->
 <!-- Container for the React component with fallback -->
 <div id="wmpr-react-table" class="wmpr-react-container">
     <!-- React component will render here -->
     <div id="wmpr-loading-fallback" style="text-align: center; padding: 20px; color: #626f86;">
         <div style="display: inline-block; width: 16px; height: 16px; border: 2px solid #0052cc; border-top: 2px solid transparent; border-radius: 50%; animation: wmpr-spin 1s linear infinite;"></div>
         <p style="margin: 10px 0 0 0; font-size: 12px;">Loading WMPR requests...</p>
+        <small style="color: #999; font-size: 10px;">IKKKKKKE-TEMPLATE-051: Loading Fallback Active</small>
     </div>
     
     <!-- Fallback HTML table (hidden by default) -->
     <div id="wmpr-fallback-table" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px 0; border-bottom: 1px solid #dfe1e6;">
             <h4 style="margin: 0; font-size: 14px; color: #172b4d;">Recent WMPR Service Desk Requests</h4>
+            <small style="color: #999; font-size: 10px;">IKKKKKKE-TEMPLATE-052: Vanilla JS Fallback Active</small>
             <button id="wmpr-refresh-btn" style="padding: 4px 8px; font-size: 11px; background: #f4f5f7; border: 1px solid #dfe1e6; border-radius: 3px; cursor: pointer;">
                 Refresh
             </button>
@@ -51,6 +54,7 @@
             <a href="/rest/wmpr-requests/1.0/recent" target="_blank" style="color: #0052cc;">View raw data</a> or 
             <a href="#" onclick="window.location.reload(); return false;" style="color: #0052cc;">reload page</a>.
         </p>
+        <small style="color: #999; font-size: 10px;">IKKKKKKE-TEMPLATE-053: Basic Fallback Active</small>
     </div>
 </div>
 
@@ -88,33 +92,52 @@
 </style>
 
 <script type="text/javascript">
+// IKKKKKKE-TEMPLATE-054 - JavaScript Initialization Check
+console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
+
 // Initialize the React component when the page loads
 (function() {
     'use strict';
     
     let retryCount = 0;
-    const maxRetries = 30; // Try for up to 15 seconds
+    const maxRetries = 60; // Increased to 30 seconds (60 * 500ms)
     let fallbackMode = 'react'; // 'react', 'vanilla', 'basic'
     
     // Enhanced debugging information
-    console.log('[WMPR Template] ===== INITIALIZATION DEBUG =====');
-    console.log('[WMPR Template] DOM ready state:', document.readyState);
-    console.log('[WMPR Template] Available globals:', Object.keys(window).filter(k => k.toLowerCase().includes('wmpr')));
-    console.log('[WMPR Template] React available:', typeof window.React);
-    console.log('[WMPR Template] ReactDOM available:', typeof window.ReactDOM);
-    console.log('[WMPR Template] AJS available:', typeof window.AJS);
+    console.log('[IKKKKKKE-TEMPLATE-055] ===== INITIALIZATION DEBUG =====');
+    console.log('[IKKKKKKE-TEMPLATE-056] DOM ready state:', document.readyState);
+    console.log('[IKKKKKKE-TEMPLATE-057] Available globals:', Object.keys(window).filter(k => k.toLowerCase().includes('wmpr')));
+    console.log('[IKKKKKKE-TEMPLATE-058] React available:', typeof window.React);
+    console.log('[IKKKKKKE-TEMPLATE-059] ReactDOM available:', typeof window.ReactDOM);
+    console.log('[IKKKKKKE-TEMPLATE-060] AJS available:', typeof window.AJS);
+    console.log('[IKKKKKKE-TEMPLATE-061] WMPR global available:', typeof window.WMPR);
     
     function initWMPRReactComponent() {
-        console.log('[WMPR Template] Initializing React component... (attempt ' + (retryCount + 1) + ')');
-        console.log('[WMPR Template] Checking for initWMPRRequestsTable function...');
-        console.log('[WMPR Template] Function type:', typeof window.initWMPRRequestsTable);
+        console.log('[IKKKKKKE-TEMPLATE-062] Initializing React component... (attempt ' + (retryCount + 1) + ')');
+        console.log('[IKKKKKKE-TEMPLATE-063] Checking for initWMPRRequestsTable function...');
+        console.log('[IKKKKKKE-TEMPLATE-064] Function type:', typeof window.initWMPRRequestsTable);
+        console.log('[IKKKKKKE-TEMPLATE-065] WMPR global type:', typeof window.WMPR);
         
-        // Check if the initialization function is available
+        // Check multiple ways the function might be exposed
+        let initFunction = null;
+        
         if (typeof window.initWMPRRequestsTable === 'function') {
+            initFunction = window.initWMPRRequestsTable;
+            console.log('[IKKKKKKE-TEMPLATE-066] Found function at window.initWMPRRequestsTable');
+        } else if (typeof window.WMPR === 'object' && window.WMPR && typeof window.WMPR.initWMPRRequestsTable === 'function') {
+            initFunction = window.WMPR.initWMPRRequestsTable;
+            console.log('[IKKKKKKE-TEMPLATE-067] Found function at window.WMPR.initWMPRRequestsTable');
+        } else if (typeof window.WMPR === 'function') {
+            // In case WMPR is the function itself
+            initFunction = window.WMPR;
+            console.log('[IKKKKKKE-TEMPLATE-068] Found function at window.WMPR (direct)');
+        }
+        
+        if (initFunction) {
             try {
-                console.log('[WMPR Template] Found initWMPRRequestsTable function, initializing...');
+                console.log('[IKKKKKKE-TEMPLATE-069] Found initialization function, calling...');
                 // Initialize the React component
-                window.initWMPRRequestsTable('wmpr-react-table');
+                initFunction('wmpr-react-table');
                 
                 // Mark container as loaded
                 const container = document.getElementById('wmpr-react-table');
@@ -122,24 +145,26 @@
                     container.classList.add('react-loaded');
                 }
                 
-                console.log('[WMPR Template] React component initialized successfully');
+                console.log('[IKKKKKKE-TEMPLATE-070] React component initialized successfully');
                 return true; // Success
             } catch (error) {
-                console.error('[WMPR Template] Error initializing React component:', error);
-                console.error('[WMPR Template] Error stack:', error.stack);
+                console.error('[IKKKKKKE-TEMPLATE-071] Error initializing React component:', error);
+                console.error('[IKKKKKKE-TEMPLATE-072] Error stack:', error.stack);
                 fallbackToVanillaJS();
                 return false;
             }
         } else {
             retryCount++;
             if (retryCount < maxRetries) {
-                console.warn('[WMPR Template] initWMPRRequestsTable function not found, retrying in 500ms... (' + retryCount + '/' + maxRetries + ')');
-                console.warn('[WMPR Template] Current window functions:', Object.keys(window).filter(k => typeof window[k] === 'function' && k.toLowerCase().includes('wmpr')));
+                console.warn('[IKKKKKKE-TEMPLATE-073] initWMPRRequestsTable function not found, retrying in 500ms... (' + retryCount + '/' + maxRetries + ')');
+                console.warn('[IKKKKKKE-TEMPLATE-074] Current window functions:', Object.keys(window).filter(k => typeof window[k] === 'function' && k.toLowerCase().includes('wmpr')));
+                console.warn('[IKKKKKKE-TEMPLATE-075] Current window objects:', Object.keys(window).filter(k => typeof window[k] === 'object' && k.toLowerCase().includes('wmpr')));
                 setTimeout(initWMPRReactComponent, 500);
                 return false;
             } else {
-                console.error('[WMPR Template] Failed to find initWMPRRequestsTable function after ' + maxRetries + ' attempts');
-                console.error('[WMPR Template] Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('wmpr')));
+                console.error('[IKKKKKKE-TEMPLATE-076] Failed to find initWMPRRequestsTable function after ' + maxRetries + ' attempts');
+                console.error('[IKKKKKKE-TEMPLATE-077] Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('wmpr')));
+                console.error('[IKKKKKKE-TEMPLATE-078] All window properties:', Object.keys(window));
                 fallbackToVanillaJS();
                 return false;
             }
@@ -147,7 +172,7 @@
     }
     
     function fallbackToVanillaJS() {
-        console.log('[WMPR Template] Falling back to vanilla JavaScript implementation');
+        console.log('[IKKKKKKE-TEMPLATE-079] Falling back to vanilla JavaScript implementation');
         fallbackMode = 'vanilla';
         
         // Hide loading indicator
@@ -173,7 +198,7 @@
     }
     
     function loadWMPRDataVanilla() {
-        console.log('[WMPR Template] Loading data with vanilla JavaScript');
+        console.log('[IKKKKKKE-TEMPLATE-080] Loading data with vanilla JavaScript');
         
         const tableBody = document.getElementById('wmpr-table-body');
         if (!tableBody) return;
@@ -189,13 +214,14 @@
                 if (xhr.status === 200) {
                     try {
                         var data = JSON.parse(xhr.responseText);
+                        console.log('[IKKKKKKE-TEMPLATE-081] Vanilla JS API response:', data);
                         renderVanillaTable(data);
                     } catch (error) {
-                        console.error('[WMPR Template] Error parsing response:', error);
+                        console.error('[IKKKKKKE-TEMPLATE-082] Error parsing response:', error);
                         showBasicFallback();
                     }
                 } else {
-                    console.error('[WMPR Template] API request failed:', xhr.status, xhr.statusText);
+                    console.error('[IKKKKKKE-TEMPLATE-083] API request failed:', xhr.status, xhr.statusText);
                     showBasicFallback();
                 }
             }
@@ -230,7 +256,7 @@
         }
         
         tableBody.innerHTML = html;
-        console.log('[WMPR Template] Vanilla table rendered with ' + requests.length + ' requests');
+        console.log('[IKKKKKKE-TEMPLATE-084] Vanilla table rendered with ' + requests.length + ' requests');
     }
     
     function getStatusColor(category) {
@@ -243,7 +269,7 @@
     }
     
     function showBasicFallback() {
-        console.log('[WMPR Template] Showing basic fallback');
+        console.log('[IKKKKKKE-TEMPLATE-085] Showing basic fallback');
         fallbackMode = 'basic';
         
         // Hide other elements
@@ -256,56 +282,42 @@
         if (basicFallback) basicFallback.style.display = 'block';
     }
     
-    function showFallbackError(error) {
-        // This function is now mainly for debugging in basic fallback mode
-        console.error('[WMPR Template] Fallback error:', error);
+    // CRITICAL: Wait for web resources to load before initializing
+    function waitForWebResources() {
+        console.log('[IKKKKKKE-TEMPLATE-086] Waiting for web resources to load...');
         
-        if (fallbackMode === 'basic') {
-            const basicFallback = document.getElementById('wmpr-basic-fallback');
-            if (basicFallback) {
-                const baseUrl = window.location.origin;
-                const debugInfo = {
-                    error: error.message || 'Component failed to initialize',
-                    baseUrl: baseUrl,
-                    initFunction: typeof window.initWMPRRequestsTable,
-                    fallbackMode: fallbackMode,
-                    windowKeys: Object.keys(window).filter(k => k.toLowerCase().includes('wmpr'))
-                };
-                
-                basicFallback.innerHTML = '<div style="padding: 15px; background: #ffebe6; border: 1px solid #ff5630; border-radius: 3px; font-size: 12px; font-family: monospace;">' +
-                    '<h4 style="margin: 0 0 10px 0; color: #bf2600;">WMPR Debug Information</h4>' +
-                    '<strong>Error:</strong> ' + debugInfo.error + '<br>' +
-                    '<strong>Fallback Mode:</strong> ' + debugInfo.fallbackMode + '<br>' +
-                    '<strong>Base URL:</strong> ' + debugInfo.baseUrl + '<br>' +
-                    '<strong>Init Function:</strong> ' + debugInfo.initFunction + '<br>' +
-                    '<strong>WMPR Window Keys:</strong> ' + JSON.stringify(debugInfo.windowKeys) + '<br><br>' +
-                    '<strong>Test these URLs manually:</strong><br>' +
-                    '• <a href="' + baseUrl + '/rest/wmpr-requests/1.0/recent" target="_blank" style="color: #0052cc;">REST API</a><br>' +
-                    '• <a href="' + baseUrl + '/plugins/servlet/upm" target="_blank" style="color: #0052cc;">Plugin Manager</a><br>' +
-                    '<br><button onclick="window.location.reload(); return false;" style="background: #0052cc; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Reload Page</button>' +
-                    '</div>';
-            }
+        // Check if React and ReactDOM are available (from Jira)
+        if (typeof window.React !== 'undefined' && typeof window.ReactDOM !== 'undefined') {
+            console.log('[IKKKKKKE-TEMPLATE-087] React dependencies loaded, starting component initialization');
+            // Small additional delay to ensure our bundle is loaded
+            setTimeout(initWMPRReactComponent, 1000);
+        } else {
+            console.log('[IKKKKKKE-TEMPLATE-088] React dependencies not yet loaded, waiting...');
+            setTimeout(waitForWebResources, 500);
         }
     }
     
-    // Initialize when DOM is ready
+    // Initialize when DOM and AJS are ready
     if (typeof AJS !== 'undefined' && AJS.toInit) {
+        console.log('[IKKKKKKE-TEMPLATE-089] AJS available, using AJS.toInit');
         AJS.toInit(function() {
-            console.log('[WMPR Template] AJS initialized, starting React component...');
-            // Add a longer delay to ensure web resources are fully loaded
-            setTimeout(initWMPRReactComponent, 1000);
+            console.log('[IKKKKKKE-TEMPLATE-090] AJS initialized, waiting for web resources...');
+            waitForWebResources();
         });
     } else {
         // Fallback if AJS is not available
+        console.log('[IKKKKKKE-TEMPLATE-091] AJS not available, using DOMContentLoaded');
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(initWMPRReactComponent, 1000);
+                console.log('[IKKKKKKE-TEMPLATE-092] DOM loaded, waiting for web resources...');
+                waitForWebResources();
             });
         } else {
-            setTimeout(initWMPRReactComponent, 1000);
+            console.log('[IKKKKKKE-TEMPLATE-093] DOM already loaded, waiting for web resources...');
+            waitForWebResources();
         }
     }
     
-    console.log('[WMPR Template] Initialization script loaded');
+    console.log('[IKKKKKKE-TEMPLATE-094] Initialization script loaded and configured');
 })();
 </script> 
