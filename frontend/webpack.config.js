@@ -71,7 +71,7 @@ module.exports = (_, { mode }) => {
             }),
             new WrmPlugin({
                 watch,
-                locationPrefix: 'frontend/',
+                locationPrefix: '',
                 pluginKey: 'com.example.wmpr.backend',
                 xmlDescriptors: xmlOutPath,
                 contextMap: {
