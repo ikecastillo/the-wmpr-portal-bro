@@ -90,14 +90,44 @@ public class WmprSettingsServlet extends HttpServlet {
             // Check for success message
             boolean showSuccess = "true".equals(request.getParameter("saved"));
             
-            // Always use simple HTML page since Velocity templates aren't loading
-            renderProjectSettingsHtml(response, projectKey, project.getName(), currentJql, useCustomJql, showSuccess);
+            // Try Velocity template first, fallback to HTML if needed
+            try {
+                renderVelocityTemplate(response, projectKey, project.getName(), currentJql, useCustomJql, showSuccess);
+            } catch (Exception velocityError) {
+                System.err.println("Velocity template failed, using HTML fallback: " + velocityError.getMessage());
+                renderProjectSettingsHtml(response, projectKey, project.getName(), currentJql, useCustomJql, showSuccess);
+            }
             
         } catch (Exception e) {
+            System.err.println("Error in WMPR settings servlet: " + e.getMessage());
+            e.printStackTrace();
             // Fallback to simple HTML if everything fails
-            renderProjectSettingsHtml(response, projectKey, project != null ? project.getName() : "Unknown", 
-                DEFAULT_JQL, false, false);
+            try {
+                renderProjectSettingsHtml(response, projectKey, project != null ? project.getName() : "Unknown", 
+                    DEFAULT_JQL, false, false);
+            } catch (IOException ioError) {
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to render settings page");
+            }
         }
+    }
+    
+    private void renderVelocityTemplate(HttpServletResponse response, String projectKey, String projectName, 
+                                       String currentJql, boolean useCustomJql, boolean showSuccess) throws Exception {
+        TemplateRenderer templateRenderer = getTemplateRenderer();
+        if (templateRenderer == null) {
+            throw new Exception("TemplateRenderer not available");
+        }
+        
+        Map<String, Object> context = new HashMap<>();
+        context.put("projectKey", projectKey);
+        context.put("projectName", projectName);
+        context.put("currentJql", currentJql);
+        context.put("useCustomJql", useCustomJql);
+        context.put("defaultJql", DEFAULT_JQL);
+        context.put("showSuccess", showSuccess);
+        
+        response.setContentType("text/html;charset=UTF-8");
+        templateRenderer.render("/templates/wmpr-settings.vm", context, response.getWriter());
     }
     
     private void renderProjectSettingsHtml(HttpServletResponse response, String projectKey, String projectName, 

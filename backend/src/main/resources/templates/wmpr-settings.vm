@@ -4,6 +4,11 @@
     <meta charset="utf-8">
     <meta name="decorator" content="atl.general">
     <title>WMPR Settings - $projectName</title>
+    
+    ## CRITICAL: Test React/AtlasKit availability in Project Config context
+    $webResourceManager.requireResource("com.atlassian.jira.plugins.jira-react-plugin:react")
+    $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+    $webResourceManager.requireResourcesForContext("com.example.wmpr.backend:entrypoint-wmprRequestsTable")
     <style>
         .wmpr-settings-container {
             max-width: 800px;
@@ -204,11 +209,111 @@
         </form>
     </div>
     
+    <!-- REACT/ATLASKIT TEST SECTION -->
+    <div class="wmpr-settings-container" style="margin-top: 30px;">
+        <h3>🧪 React/AtlasKit Compatibility Test</h3>
+        <p style="color: #626f86; font-size: 14px;">
+            Testing if React and AtlasKit work in the Project Configuration context...
+        </p>
+        
+        <!-- Debug Information Panel -->
+        <div id="react-debug-info" style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin: 15px 0; font-family: monospace; font-size: 12px; border-radius: 4px;">
+            <strong>React Debug Info:</strong><br>
+            <span id="debug-context">Context: Project Configuration</span><br>
+            <span id="debug-react-status">React Status: Checking...</span><br>
+            <span id="debug-bundle-status">Bundle Status: Checking...</span><br>
+            <span id="debug-atlaskit-status">AtlasKit Status: Checking...</span>
+        </div>
+        
+        <!-- React Component Test Container -->
+        <div id="react-test-container" style="padding: 20px; border: 2px dashed #dfe1e6; border-radius: 4px; min-height: 100px;">
+            <div id="react-loading" style="text-align: center; color: #626f86; padding: 20px;">
+                🔄 Loading React component test...
+            </div>
+        </div>
+        
+        <!-- Fallback Message -->
+        <div id="react-fallback" style="display: none; background: #ffebe6; border: 1px solid #ff8f73; padding: 15px; margin-top: 15px; border-radius: 4px;">
+            <strong>React Not Available</strong><br>
+            React/AtlasKit components cannot be used in this context. Using vanilla JS fallback.
+        </div>
+        
+        <!-- Success Message -->
+        <div id="react-success" style="display: none; background: #e3fcef; border: 1px solid #36b37e; padding: 15px; margin-top: 15px; border-radius: 4px;">
+            <strong>✅ React Works!</strong><br>
+            React and AtlasKit are available in this context. You can use modern components here.
+        </div>
+    </div>
+    
     <script>
         // Initialize the form state
         document.addEventListener('DOMContentLoaded', function() {
             toggleJqlInput();
         });
+        
+        // REACT/ATLASKIT TEST SCRIPT
+        (function testReactAvailability() {
+            console.log('[WMPR-SETTINGS-001] Starting React availability test...');
+            
+            function updateDebugUI(id, message) {
+                const element = document.getElementById(id);
+                if (element) element.textContent = message;
+            }
+            
+            function showFallback(reason) {
+                console.log('[WMPR-SETTINGS-002] React not available:', reason);
+                document.getElementById('react-fallback').style.display = 'block';
+                document.getElementById('react-loading').style.display = 'none';
+                updateDebugUI('debug-react-status', 'React Status: NOT AVAILABLE - ' + reason);
+            }
+            
+            function showSuccess() {
+                console.log('[WMPR-SETTINGS-003] React available, initializing component...');
+                document.getElementById('react-success').style.display = 'block';
+                document.getElementById('react-loading').style.display = 'none';
+                updateDebugUI('debug-react-status', 'React Status: AVAILABLE ✅');
+                
+                // Try to initialize our React component
+                if (typeof window.initWMPRRequestsTable === 'function') {
+                    console.log('[WMPR-SETTINGS-004] Found WMPR init function, testing...');
+                    updateDebugUI('debug-bundle-status', 'Bundle Status: AVAILABLE ✅');
+                    
+                    try {
+                        // Create a test container for the React component
+                        const testContainer = document.getElementById('react-test-container');
+                        testContainer.innerHTML = '<div id="wmpr-react-test-root"></div>';
+                        
+                        // Initialize the React component in test mode
+                        window.initWMPRRequestsTable('wmpr-react-test-root');
+                        updateDebugUI('debug-atlaskit-status', 'AtlasKit Status: COMPONENT LOADED ✅');
+                        
+                    } catch (error) {
+                        console.error('[WMPR-SETTINGS-005] Error initializing React component:', error);
+                        updateDebugUI('debug-bundle-status', 'Bundle Status: ERROR - ' + error.message);
+                        testContainer.innerHTML = '<div style="color: #de350b; padding: 10px;">❌ Component Error: ' + error.message + '</div>';
+                    }
+                } else {
+                    console.log('[WMPR-SETTINGS-006] WMPR init function not found');
+                    updateDebugUI('debug-bundle-status', 'Bundle Status: INIT FUNCTION NOT FOUND');
+                    document.getElementById('react-test-container').innerHTML = '<div style="color: #ff8b00; padding: 10px;">⚠️ React available but WMPR bundle not loaded</div>';
+                }
+            }
+            
+            // Initial debug info
+            updateDebugUI('debug-context', 'Context: Project Configuration (' + window.location.pathname + ')');
+            
+            // Test React availability
+            setTimeout(function() {
+                if (typeof window.React === 'undefined') {
+                    showFallback('window.React is undefined');
+                } else if (typeof window.ReactDOM === 'undefined') {
+                    showFallback('window.ReactDOM is undefined');
+                } else {
+                    updateDebugUI('debug-react-status', 'React Status: React v' + (React.version || 'unknown') + ' & ReactDOM available ✅');
+                    showSuccess();
+                }
+            }, 2000); // Wait 2 seconds for resources to load
+        })();
     </script>
 </body>
 </html> 
