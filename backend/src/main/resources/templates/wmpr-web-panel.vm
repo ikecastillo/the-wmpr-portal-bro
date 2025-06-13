@@ -6,30 +6,7 @@ $webResourceManager.requireResource("com.atlassian.jira.plugins.jira-react-plugi
 $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
 $webResourceManager.requireResourcesForContext("com.example.wmpr.backend:entrypoint-wmprRequestsTable")
 
-## FALLBACK: Load React from CDN if not available in this context
-<script>
-if (typeof window.React === 'undefined') {
-    console.log('[IKKKKKKE-FALLBACK-001] React not available, loading from CDN...');
-    var reactScript = document.createElement('script');
-    reactScript.src = 'https://unpkg.com/react@17/umd/react.production.min.js';
-    reactScript.onload = function() {
-        console.log('[IKKKKKKE-FALLBACK-002] React loaded from CDN');
-        var reactDomScript = document.createElement('script');
-        reactDomScript.src = 'https://unpkg.com/react-dom@17/umd/react-dom.production.min.js';
-        reactDomScript.onload = function() {
-            console.log('[IKKKKKKE-FALLBACK-003] ReactDOM loaded from CDN');
-            // Trigger our component initialization after React is loaded
-            if (typeof window.initWMPRReactComponent === 'function') {
-                window.initWMPRReactComponent();
-            }
-        };
-        document.head.appendChild(reactDomScript);
-    };
-    document.head.appendChild(reactScript);
-} else {
-    console.log('[IKKKKKKE-FALLBACK-004] React already available, continuing...');
-}
-</script>
+## Service Desk Portal Strategy: Use vanilla JS due to React conflicts in this context
 
 <!-- IKKKKKKE-TEMPLATE-050 - Velocity Template Loading Check -->
 <!-- Container for the React component with fallback -->
@@ -52,31 +29,33 @@ if (typeof window.React === 'undefined') {
         <span id="debug-init">Init Function: Not Found</span>
     </div>
     
-    <!-- Fallback HTML table (hidden by default) -->
+    <!-- Enhanced Vanilla JS table (hidden by default) -->
     <div id="wmpr-fallback-table" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px 0; border-bottom: 1px solid #dfe1e6;">
-            <h4 style="margin: 0; font-size: 14px; color: #172b4d;">Recent WMPR Service Desk Requests</h4>
-            <small style="color: #999; font-size: 10px;">IKKKKKKE-TEMPLATE-052: Vanilla JS Fallback Active</small>
-            <button id="wmpr-refresh-btn" style="padding: 4px 8px; font-size: 11px; background: #f4f5f7; border: 1px solid #dfe1e6; border-radius: 3px; cursor: pointer;">
-                Refresh
-            </button>
+            <h4 style="margin: 0; font-size: 16px; color: #172b4d; font-weight: 600;">Recent WMPR Service Desk Requests</h4>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <small style="color: #6b778c; font-size: 10px;">✓ Vanilla JS Active (React-free)</small>
+                <button id="wmpr-refresh-btn" style="padding: 6px 12px; font-size: 11px; background: #0052cc; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                    ↻ Refresh
+                </button>
+            </div>
         </div>
         
         <div id="wmpr-table-content">
-            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <thead>
-                    <tr style="background: #f4f5f7; border-bottom: 1px solid #dfe1e6;">
-                        <th style="padding: 8px; text-align: left; font-weight: bold;">Request</th>
-                        <th style="padding: 8px; text-align: left; font-weight: bold;">Summary</th>
-                        <th style="padding: 8px; text-align: left; font-weight: bold;">Reporter</th>
-                        <th style="padding: 8px; text-align: left; font-weight: bold;">Created</th>
-                        <th style="padding: 8px; text-align: left; font-weight: bold;">Status</th>
+                    <tr style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 2px solid #dfe1e6;">
+                        <th style="padding: 12px 10px; text-align: left; font-weight: 600; color: #172b4d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Request</th>
+                        <th style="padding: 12px 10px; text-align: left; font-weight: 600; color: #172b4d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Summary</th>
+                        <th style="padding: 12px 10px; text-align: left; font-weight: 600; color: #172b4d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Reporter</th>
+                        <th style="padding: 12px 10px; text-align: left; font-weight: 600; color: #172b4d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Created</th>
+                        <th style="padding: 12px 10px; text-align: left; font-weight: 600; color: #172b4d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Status</th>
                     </tr>
                 </thead>
                 <tbody id="wmpr-table-body">
                     <tr>
-                        <td colspan="5" style="padding: 20px; text-align: center; color: #626f86;">
-                            Loading requests...
+                        <td colspan="5" style="padding: 30px; text-align: center; color: #626f86; font-style: italic;">
+                            🔄 Loading requests...
                         </td>
                     </tr>
                 </tbody>
@@ -283,13 +262,14 @@ console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
             var request = requests[i];
             var statusColor = getStatusColor(request.statusCategory);
             var formattedDate = new Date(request.created).toLocaleDateString();
+            var rowHover = i % 2 === 0 ? '#fafbfc' : 'white';
             
-            html += '<tr style="border-bottom: 1px solid #f4f5f7;">';
-            html += '<td style="padding: 8px;"><a href="/browse/' + request.key + '" target="_blank" style="color: #0052cc; text-decoration: none; font-weight: bold;">' + request.key + '</a></td>';
-            html += '<td style="padding: 8px;" title="' + request.summary + '">' + (request.summary.length > 50 ? request.summary.substring(0, 50) + '...' : request.summary) + '</td>';
-            html += '<td style="padding: 8px;">' + request.reporter + '</td>';
-            html += '<td style="padding: 8px;">' + formattedDate + '</td>';
-            html += '<td style="padding: 8px;"><span style="background: ' + statusColor + '; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px;">' + request.status + '</span></td>';
+            html += '<tr style="border-bottom: 1px solid #f1f2f4; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor=\'#f8f9fa\'" onmouseout="this.style.backgroundColor=\'' + rowHover + '\'">';
+            html += '<td style="padding: 12px 10px;"><a href="/browse/' + request.key + '" target="_blank" style="color: #0052cc; text-decoration: none; font-weight: 600; font-family: monospace;">' + request.key + '</a></td>';
+            html += '<td style="padding: 12px 10px; max-width: 250px;" title="' + request.summary + '">' + (request.summary.length > 60 ? request.summary.substring(0, 60) + '...' : request.summary) + '</td>';
+            html += '<td style="padding: 12px 10px; color: #6b778c;">' + request.reporter + '</td>';
+            html += '<td style="padding: 12px 10px; color: #6b778c; font-size: 12px;">' + formattedDate + '</td>';
+            html += '<td style="padding: 12px 10px;"><span style="background: ' + statusColor + '; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">' + request.status + '</span></td>';
             html += '</tr>';
         }
         
@@ -320,18 +300,26 @@ console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
         if (basicFallback) basicFallback.style.display = 'block';
     }
     
-    // CRITICAL: Wait for web resources to load before initializing
+    // CRITICAL: Skip React in Service Desk Portal due to existing React errors
     function waitForWebResources() {
-        console.log('[IKKKKKKE-TEMPLATE-086] Waiting for web resources to load...');
+        console.log('[IKKKKKKE-TEMPLATE-086] Checking for React compatibility...');
         
-        // Check if React and ReactDOM are available (from Jira)
+        // Check if we're in Service Desk Portal context
+        const isServiceDesk = window.location.pathname.includes('/servicedesk/');
+        
+        if (isServiceDesk) {
+            console.log('[IKKKKKKE-TEMPLATE-087] Service Desk Portal detected - using vanilla JS (React has known issues in this context)');
+            fallbackToVanillaJS();
+            return;
+        }
+        
+        // Only try React in non-Service Desk contexts
         if (typeof window.React !== 'undefined' && typeof window.ReactDOM !== 'undefined') {
-            console.log('[IKKKKKKE-TEMPLATE-087] React dependencies loaded, starting component initialization');
-            // Small additional delay to ensure our bundle is loaded
+            console.log('[IKKKKKKE-TEMPLATE-088] React dependencies loaded, starting component initialization');
             setTimeout(initWMPRReactComponent, 1000);
         } else {
-            console.log('[IKKKKKKE-TEMPLATE-088] React dependencies not yet loaded, waiting...');
-            setTimeout(waitForWebResources, 500);
+            console.log('[IKKKKKKE-TEMPLATE-089] React dependencies not available, falling back to vanilla JS');
+            fallbackToVanillaJS();
         }
     }
     
@@ -372,7 +360,8 @@ console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
         }
         
         updateDebugUI('debug-timestamp', new Date().toISOString() + ' - IKKKKKKE-DEBUG-002');
-        updateDebugUI('debug-context', 'Service Desk Portal - IKKKKKKE-DEBUG-003');
+        const isServiceDesk = window.location.pathname.includes('/servicedesk/');
+        updateDebugUI('debug-context', isServiceDesk ? 'Service Desk Portal (Vanilla JS Mode) - IKKKKKKE-DEBUG-003' : 'General Context - IKKKKKKE-DEBUG-003');
         
         // Check for available resources
         const resourceChecks = {
