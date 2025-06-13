@@ -90,11 +90,15 @@ public class WmprSettingsServlet extends HttpServlet {
             // Check for success message
             boolean showSuccess = "true".equals(request.getParameter("saved"));
             
-            // Try Velocity template first, fallback to HTML if needed
+            // Force Velocity template loading with detailed error reporting
             try {
+                System.out.println("[WMPR-SERVLET-001] Attempting to render Velocity template...");
                 renderVelocityTemplate(response, projectKey, project.getName(), currentJql, useCustomJql, showSuccess);
+                System.out.println("[WMPR-SERVLET-002] Velocity template rendered successfully");
             } catch (Exception velocityError) {
-                System.err.println("Velocity template failed, using HTML fallback: " + velocityError.getMessage());
+                System.err.println("[WMPR-SERVLET-003] Velocity template failed: " + velocityError.getMessage());
+                velocityError.printStackTrace();
+                System.err.println("[WMPR-SERVLET-004] Falling back to HTML generation");
                 renderProjectSettingsHtml(response, projectKey, project.getName(), currentJql, useCustomJql, showSuccess);
             }
             
@@ -113,10 +117,12 @@ public class WmprSettingsServlet extends HttpServlet {
     
     private void renderVelocityTemplate(HttpServletResponse response, String projectKey, String projectName, 
                                        String currentJql, boolean useCustomJql, boolean showSuccess) throws Exception {
+        System.out.println("[WMPR-SERVLET-005] Getting TemplateRenderer...");
         TemplateRenderer templateRenderer = getTemplateRenderer();
         if (templateRenderer == null) {
-            throw new Exception("TemplateRenderer not available");
+            throw new Exception("TemplateRenderer not available - check OSGi component registration");
         }
+        System.out.println("[WMPR-SERVLET-006] TemplateRenderer obtained: " + templateRenderer.getClass().getName());
         
         Map<String, Object> context = new HashMap<>();
         context.put("projectKey", projectKey);
@@ -125,6 +131,9 @@ public class WmprSettingsServlet extends HttpServlet {
         context.put("useCustomJql", useCustomJql);
         context.put("defaultJql", DEFAULT_JQL);
         context.put("showSuccess", showSuccess);
+        
+        System.out.println("[WMPR-SERVLET-007] Template context prepared, rendering template...");
+        System.out.println("[WMPR-SERVLET-008] Template path: /templates/wmpr-settings.vm");
         
         response.setContentType("text/html;charset=UTF-8");
         templateRenderer.render("/templates/wmpr-settings.vm", context, response.getWriter());
