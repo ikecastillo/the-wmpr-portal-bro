@@ -1,8 +1,35 @@
 ## WMPR Requests Panel - Service Desk Footer
 ## Uses React component with atlas-kit for enhanced UI
 
-## Web resources are loaded automatically via web-panel dependencies
-## No need to manually require - this can cause conflicts
+## CRITICAL: Explicitly require React resources for Service Desk context
+$webResourceManager.requireResource("com.atlassian.jira.plugins.jira-react-plugin:react")
+$webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+$webResourceManager.requireResourcesForContext("com.example.wmpr.backend:entrypoint-wmprRequestsTable")
+
+## FALLBACK: Load React from CDN if not available in this context
+<script>
+if (typeof window.React === 'undefined') {
+    console.log('[IKKKKKKE-FALLBACK-001] React not available, loading from CDN...');
+    var reactScript = document.createElement('script');
+    reactScript.src = 'https://unpkg.com/react@17/umd/react.production.min.js';
+    reactScript.onload = function() {
+        console.log('[IKKKKKKE-FALLBACK-002] React loaded from CDN');
+        var reactDomScript = document.createElement('script');
+        reactDomScript.src = 'https://unpkg.com/react-dom@17/umd/react-dom.production.min.js';
+        reactDomScript.onload = function() {
+            console.log('[IKKKKKKE-FALLBACK-003] ReactDOM loaded from CDN');
+            // Trigger our component initialization after React is loaded
+            if (typeof window.initWMPRReactComponent === 'function') {
+                window.initWMPRReactComponent();
+            }
+        };
+        document.head.appendChild(reactDomScript);
+    };
+    document.head.appendChild(reactScript);
+} else {
+    console.log('[IKKKKKKE-FALLBACK-004] React already available, continuing...');
+}
+</script>
 
 <!-- IKKKKKKE-TEMPLATE-050 - Velocity Template Loading Check -->
 <!-- Container for the React component with fallback -->
@@ -307,6 +334,9 @@ console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
             setTimeout(waitForWebResources, 500);
         }
     }
+    
+    // CRITICAL: Expose initialization function globally for CDN fallback
+    window.initWMPRReactComponent = initWMPRReactComponent;
     
     // Initialize when DOM and AJS are ready
     if (typeof AJS !== 'undefined' && AJS.toInit) {
