@@ -5,10 +5,12 @@
     <meta name="decorator" content="atl.general">
     <title>WMPR Settings - $projectName</title>
     
-    ## CRITICAL: Test React/AtlasKit availability in Project Config context
+    ## CRITICAL: Load React dependencies and our bundle in the correct order
     $webResourceManager.requireResource("com.atlassian.jira.plugins.jira-react-plugin:react")
     $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
-    $webResourceManager.requireResourcesForContext("com.example.wmpr.backend:entrypoint-wmprRequestsTable")
+    $webResourceManager.requireResource("jira.webresources:jira-global")
+    ## Load our React bundle - this should now work in admin context
+    $webResourceManager.requireResource("com.example.wmpr.backend:entrypoint-wmprRequestsTable")
     <style>
         .wmpr-settings-container {
             max-width: 800px;
@@ -232,6 +234,14 @@
             </div>
         </div>
         
+        <!-- Simple React Test - Create a basic button to test React rendering -->
+        <div id="simple-react-test" style="margin-top: 15px; padding: 15px; background: #f0f8ff; border: 1px solid #4a90e2; border-radius: 4px;">
+            <h4 style="margin: 0 0 10px 0;">🧪 Simple React Test</h4>
+            <div id="simple-test-root" style="padding: 10px; background: white; border: 1px solid #ddd; border-radius: 3px; min-height: 50px;">
+                <span style="color: #999;">Waiting for React...</span>
+            </div>
+        </div>
+        
         <!-- Fallback Message -->
         <div id="react-fallback" style="display: none; background: #ffebe6; border: 1px solid #ff8f73; padding: 15px; margin-top: 15px; border-radius: 4px;">
             <strong>React Not Available</strong><br>
@@ -273,6 +283,35 @@
                 document.getElementById('react-loading').style.display = 'none';
                 updateDebugUI('debug-react-status', 'React Status: AVAILABLE ✅');
                 
+                // First, test basic React rendering with a simple component
+                try {
+                    console.log('[WMPR-SETTINGS-003a] Testing basic React rendering...');
+                    const SimpleTestButton = React.createElement(
+                        'button',
+                        {
+                            onClick: () => alert('React is working! ✅'),
+                            style: {
+                                padding: '8px 16px',
+                                backgroundColor: '#0052cc',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '3px',
+                                cursor: 'pointer',
+                                fontSize: '14px'
+                            }
+                        },
+                        '✅ Click to Test React!'
+                    );
+                    
+                    const simpleTestRoot = document.getElementById('simple-test-root');
+                    ReactDOM.render(SimpleTestButton, simpleTestRoot);
+                    console.log('[WMPR-SETTINGS-003b] ✅ Basic React test successful!');
+                } catch (simpleError) {
+                    console.error('[WMPR-SETTINGS-003c] ❌ Basic React test failed:', simpleError);
+                    document.getElementById('simple-test-root').innerHTML = 
+                        '<span style="color: red;">❌ Basic React test failed: ' + simpleError.message + '</span>';
+                }
+                
                 // Try to initialize our React component
                 if (typeof window.initWMPRRequestsTable === 'function') {
                     console.log('[WMPR-SETTINGS-004] Found WMPR init function, testing...');
@@ -290,6 +329,7 @@
                     } catch (error) {
                         console.error('[WMPR-SETTINGS-005] Error initializing React component:', error);
                         updateDebugUI('debug-bundle-status', 'Bundle Status: ERROR - ' + error.message);
+                        const testContainer = document.getElementById('react-test-container');
                         testContainer.innerHTML = '<div style="color: #de350b; padding: 10px;">❌ Component Error: ' + error.message + '</div>';
                     }
                 } else {
