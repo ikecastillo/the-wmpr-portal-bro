@@ -1,12 +1,48 @@
 ## WMPR Requests Panel - Service Desk Footer
 ## Uses React component with atlas-kit for enhanced UI
 
-## CRITICAL: Explicitly require React resources for Service Desk context
+## CRITICAL: Load React dependencies and our requests table bundle in the correct order
 $webResourceManager.requireResource("com.atlassian.jira.plugins.jira-react-plugin:react")
 $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
-$webResourceManager.requireResourcesForContext("com.example.wmpr.backend:entrypoint-wmprRequestsTable")
+$webResourceManager.requireResource("jira.webresources:jira-global")
+## Load our React requests table bundle - designed for portal/sidebar context
+$webResourceManager.requireResource("com.example.wmpr.backend:entrypoint-wmprRequestsTable")
 
 ## Service Desk Portal Strategy: Use vanilla JS due to React conflicts in this context
+
+<!-- PROMINENT REACT TEST SECTION FOR WMPR REQUESTS TABLE -->
+<div id="wmpr-requests-react-test" style="
+    background: linear-gradient(135deg, #42a5f5 0%, #26c6da 100%);
+    color: white;
+    padding: 20px;
+    margin: 15px 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    text-align: center;
+    border: 2px solid #00BCD4;
+">
+    <h3 style="margin: 0 0 10px 0; font-size: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+        📊 WMPR REQUESTS TABLE TEST 📊
+    </h3>
+    <p style="margin: 0 0 15px 0; font-size: 14px; opacity: 0.9;">
+        React component loading test for wmprRequestsTable bundle
+    </p>
+    <div id="wmpr-requests-test-root" style="
+        background: rgba(255,255,255,0.15);
+        border: 2px dashed #00BCD4;
+        border-radius: 6px;
+        padding: 15px;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+    ">
+        <div style="color: #00BCD4; font-size: 14px; font-weight: bold;">
+            ⏳ Loading wmprRequestsTable React Component...
+        </div>
+    </div>
+</div>
 
 <!-- IKKKKKKE-TEMPLATE-050 - Velocity Template Loading Check -->
 <!-- Container for the React component with fallback -->
@@ -153,7 +189,14 @@ console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
         if (initFunction) {
             try {
                 console.log('[IKKKKKKE-TEMPLATE-069] Found initialization function, calling...');
-                // Initialize the React component
+                
+                // Initialize PROMINENT test section FIRST
+                console.log('[IKKKKKKE-TEMPLATE-069a] Initializing PROMINENT test section...');
+                initFunction('wmpr-requests-test-root', 'REQUESTS TABLE TEST - Portal/Sidebar Context');
+                console.log('[IKKKKKKE-TEMPLATE-069b] ✅ Prominent test component initialized!');
+                
+                // Then initialize main component
+                console.log('[IKKKKKKE-TEMPLATE-069c] Initializing main requests table...');
                 initFunction('wmpr-react-table');
                 
                 // Mark container as loaded
@@ -162,11 +205,18 @@ console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
                     container.classList.add('react-loaded');
                 }
                 
-                console.log('[IKKKKKKE-TEMPLATE-070] React component initialized successfully');
+                console.log('[IKKKKKKE-TEMPLATE-070] React components initialized successfully');
                 return true; // Success
             } catch (error) {
                 console.error('[IKKKKKKE-TEMPLATE-071] Error initializing React component:', error);
                 console.error('[IKKKKKKE-TEMPLATE-072] Error stack:', error.stack);
+                
+                // Show error in test section
+                const testContainer = document.getElementById('wmpr-requests-test-root');
+                if (testContainer) {
+                    testContainer.innerHTML = '<div style="color: #00BCD4; background: rgba(255,0,0,0.2); padding: 10px; border-radius: 4px;">❌ React Error: ' + error.message + '</div>';
+                }
+                
                 fallbackToVanillaJS();
                 return false;
             }
@@ -182,6 +232,13 @@ console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
                 console.error('[IKKKKKKE-TEMPLATE-076] Failed to find initWMPRRequestsTable function after ' + maxRetries + ' attempts');
                 console.error('[IKKKKKKE-TEMPLATE-077] Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('wmpr')));
                 console.error('[IKKKKKKE-TEMPLATE-078] All window properties:', Object.keys(window));
+                
+                // Show message in test section
+                const testContainer = document.getElementById('wmpr-requests-test-root');
+                if (testContainer) {
+                    testContainer.innerHTML = '<div style="color: #00BCD4; font-size: 14px;">⚠️ React available but wmprRequestsTable bundle not loaded</div>';
+                }
+                
                 fallbackToVanillaJS();
                 return false;
             }
@@ -436,6 +493,63 @@ console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
         }, 500);
         
         console.log('[IKKKKKKE-DEBUG-022] ===== IMMEDIATE DEBUG CHECK COMPLETE =====');
+    })();
+    
+    // REACT/ATLASKIT TEST SCRIPT FOR PROMINENT SECTION
+    (function testReactAvailabilityForRequestsTable() {
+        console.log('[WMPR-REQUESTS-001] Starting React availability test for requests table...');
+        
+        function showFallback(reason) {
+            console.log('[WMPR-REQUESTS-002] React not available:', reason);
+            const testContainer = document.getElementById('wmpr-requests-test-root');
+            if (testContainer) {
+                testContainer.innerHTML = '<div style="color: #00BCD4; font-size: 14px;">❌ React NOT available: ' + reason + '</div>';
+            }
+        }
+        
+        function showSuccess() {
+            console.log('[WMPR-REQUESTS-003] React available, testing component...');
+            
+            // Try to initialize our React requests table component in PROMINENT section
+            if (typeof window.initWMPRRequestsTable === 'function') {
+                console.log('[WMPR-REQUESTS-004] Found wmprRequestsTable init function, testing...');
+                
+                try {
+                    // Initialize PROMINENT test section
+                    console.log('[WMPR-REQUESTS-004a] Initializing PROMINENT test section...');
+                    window.initWMPRRequestsTable('wmpr-requests-test-root', 'REQUESTS TABLE TEST - Portal/Sidebar Context');
+                    console.log('[WMPR-REQUESTS-004b] ✅ Prominent test component initialized!');
+                    
+                } catch (error) {
+                    console.error('[WMPR-REQUESTS-005] Error initializing React requests table:', error);
+                    
+                    // Show error in test section
+                    const testContainer = document.getElementById('wmpr-requests-test-root');
+                    if (testContainer) {
+                        testContainer.innerHTML = '<div style="color: #00BCD4; background: rgba(255,0,0,0.2); padding: 10px; border-radius: 4px;">❌ React Error: ' + error.message + '</div>';
+                    }
+                }
+            } else {
+                console.log('[WMPR-REQUESTS-006] wmprRequestsTable init function not found');
+                
+                // Show message in test section
+                const testContainer = document.getElementById('wmpr-requests-test-root');
+                if (testContainer) {
+                    testContainer.innerHTML = '<div style="color: #00BCD4; font-size: 14px;">⚠️ React available but wmprRequestsTable bundle not loaded</div>';
+                }
+            }
+        }
+        
+        // Test React availability after delay
+        setTimeout(function() {
+            if (typeof window.React === 'undefined') {
+                showFallback('window.React is undefined');
+            } else if (typeof window.ReactDOM === 'undefined') {
+                showFallback('window.ReactDOM is undefined');
+            } else {
+                showSuccess();
+            }
+        }, 2000); // Wait 2 seconds for resources to load
     })();
 })();
 </script> 

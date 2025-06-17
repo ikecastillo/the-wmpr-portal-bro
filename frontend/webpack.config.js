@@ -36,32 +36,23 @@ module.exports = (_, { mode }) => {
             'wmprRequestsTable': './src/wmpr-requests-table.tsx',
             'wmprSettings': './src/wmpr-settings.tsx'
         },
-        // Webpack optimizations to reduce bundle size
-        optimization: isProduction ? {
-            splitChunks: {
-                chunks: 'all',
-                cacheGroups: {
-                    atlaskitVendor: {
-                        test: /[\\/]node_modules[\\/]@atlaskit[\\/]/,
-                        name: 'atlaskit-vendor',
-                        chunks: 'all',
-                        priority: 10
-                    },
-                    commonVendor: {
-                        test: /[\\/]node_modules[\\/]/,
-                        name: 'common-vendor',
-                        chunks: 'all',
-                        priority: 5
-                    }
-                }
-            },
+        // Simplified optimization since we're using externals
+        optimization: {
             usedExports: true,
             sideEffects: false
-        } : {},
+        },
         // Configure externals for Jira-provided dependencies
         externals: {
             'react': 'React',
-            'react-dom': 'ReactDOM'
+            'react-dom': 'ReactDOM',
+            // Use Jira's existing AtlasKit components
+            '@atlaskit/button': ['AJS', 'AtlasKit', 'Button'],
+            '@atlaskit/spinner': ['AJS', 'AtlasKit', 'Spinner'], 
+            '@atlaskit/lozenge': ['AJS', 'AtlasKit', 'Lozenge'],
+            '@atlaskit/textfield': ['AJS', 'AtlasKit', 'TextField'],
+            '@atlaskit/form': ['AJS', 'AtlasKit', 'Form'],
+            '@atlaskit/select': ['AJS', 'AtlasKit', 'Select'],
+            '@atlaskit/toggle': ['AJS', 'AtlasKit', 'Toggle']
         },
         plugins: [
             // Add tracking identifier banner
@@ -72,7 +63,7 @@ module.exports = (_, { mode }) => {
             }),
             new WrmPlugin({
                 watch,
-                locationPrefix: '',
+                locationPrefix: '/frontend/',
                 pluginKey: 'com.example.wmpr.backend',
                 xmlDescriptors: xmlOutPath,
                 contextMap: {
@@ -106,7 +97,7 @@ module.exports = (_, { mode }) => {
             }),
         ],
         output: {
-            filename: isProduction ? 'bundled.[name].[contenthash:8].js' : 'bundled.[name].js',
+            filename: 'bundled.[name].js', // Hardcoded filename for consistent loading
             path: path.resolve("../backend/src/main/resources/frontend"),
             // CRITICAL FIX: Properly expose our initialization function
             library: {
@@ -119,8 +110,8 @@ module.exports = (_, { mode }) => {
         },
         // Performance budgets to catch large bundles
         performance: {
-            maxAssetSize: 300000, // Reduced since we're using externals
-            maxEntrypointSize: 500000, 
+            maxAssetSize: 50000, // Much smaller since we're using externals
+            maxEntrypointSize: 100000, 
             hints: 'warning'
         }
     };
