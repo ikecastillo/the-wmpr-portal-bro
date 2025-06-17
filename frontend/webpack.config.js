@@ -33,7 +33,8 @@ module.exports = (_, { mode }) => {
             }]
         },
         entry: {
-            'wmprRequestsTable': './src/wmpr-requests-table.tsx'
+            'wmprRequestsTable': './src/wmpr-requests-table.tsx',
+            'wmprSettings': './src/wmpr-settings.tsx'
         },
         // Webpack optimizations to reduce bundle size
         optimization: isProduction ? {
@@ -80,7 +81,12 @@ module.exports = (_, { mode }) => {
                         'atl.general',
                         'atl.admin',  // For admin/project config pages
                         'jira.project.sidebar'  // For project-specific contexts
-                    ]  // Load in multiple contexts including project config
+                    ],  // Load in multiple contexts including project config
+                    'wmprSettings': [
+                        'atl.admin',  // For admin/project config pages
+                        'jira.project.sidebar',  // For project-specific contexts
+                        'atl.general'  // General context for testing
+                    ]  // Settings component for project configuration
                 },
                 // Jira provides these dependencies
                 providedDependencies: {
