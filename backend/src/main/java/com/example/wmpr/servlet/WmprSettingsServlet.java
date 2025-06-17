@@ -133,10 +133,10 @@ public class WmprSettingsServlet extends HttpServlet {
         context.put("showSuccess", showSuccess);
         
         System.out.println("[WMPR-SERVLET-007] Template context prepared, rendering template...");
-        System.out.println("[WMPR-SERVLET-008] Template path: templates/wmpr-settings.vm");
+        System.out.println("[WMPR-SERVLET-008] Template path: /templates/wmpr-settings.vm");
         
         response.setContentType("text/html;charset=UTF-8");
-        templateRenderer.render("templates/wmpr-settings.vm", context, response.getWriter());
+        templateRenderer.render("/templates/wmpr-settings.vm", context, response.getWriter());
     }
     
     private void renderProjectSettingsHtml(HttpServletResponse response, String projectKey, String projectName, 
