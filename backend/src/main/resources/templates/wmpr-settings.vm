@@ -4,6 +4,13 @@
     <meta charset="utf-8">
     <meta name="decorator" content="atl.general">
     <title>WMPR Settings - $projectName</title>
+    
+    ## CRITICAL: Load React dependencies and our settings bundle in the correct order
+    $webResourceManager.requireResource("com.atlassian.jira.plugins.jira-react-plugin:react")
+    $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+    $webResourceManager.requireResource("jira.webresources:jira-global")
+    ## Load our React settings bundle - designed specifically for admin context
+    $webResourceManager.requireResource("com.example.wmpr.backend:entrypoint-wmprSettings")
     <style>
         .wmpr-settings-container {
             max-width: 800px;
@@ -136,6 +143,40 @@
     </script>
 </head>
 <body>
+    <!-- PROMINENT REACT TEST SECTION AT TOP -->
+    <div id="main-react-test" style="
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        margin: 20px;
+        border-radius: 10px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        text-align: center;
+        border: 3px solid #FFD700;
+    ">
+        <h1 style="margin: 0 0 15px 0; font-size: 28px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+            🚀 REACT COMPONENT TEST AREA 🚀
+        </h1>
+        <p style="margin: 0 0 20px 0; font-size: 18px; opacity: 0.9;">
+            If React is working, you'll see an interactive component below:
+        </p>
+        <div id="main-settings-test-root" style="
+            background: rgba(255,255,255,0.1);
+            border: 2px dashed #FFD700;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        ">
+            <div style="color: #FFD700; font-size: 16px; font-weight: bold;">
+                ⏳ Loading React Component...
+            </div>
+        </div>
+    </div>
+
     <div class="wmpr-settings-container">
         <div class="wmpr-breadcrumb">
             <a href="/browse/$projectKey">$projectName</a> &gt; 
@@ -209,6 +250,63 @@
         document.addEventListener('DOMContentLoaded', function() {
             toggleJqlInput();
         });
+        
+        // REACT/ATLASKIT TEST SCRIPT
+        (function testReactAvailability() {
+            console.log('[WMPR-SETTINGS-001] Starting React availability test...');
+            
+            function showFallback(reason) {
+                console.log('[WMPR-SETTINGS-002] React not available:', reason);
+                const mainContainer = document.getElementById('main-settings-test-root');
+                if (mainContainer) {
+                    mainContainer.innerHTML = '<div style="color: #FFD700; font-size: 16px;">❌ React NOT available: ' + reason + '</div>';
+                }
+            }
+            
+            function showSuccess() {
+                console.log('[WMPR-SETTINGS-003] React available, initializing component...');
+                
+                // Try to initialize our React settings component in MAIN section
+                if (typeof window.initWMPRSettings === 'function') {
+                    console.log('[WMPR-SETTINGS-004] Found WMPR Settings init function, testing...');
+                    
+                    try {
+                        // Initialize MAIN prominent test section
+                        console.log('[WMPR-SETTINGS-004a] Initializing MAIN test section...');
+                        window.initWMPRSettings('main-settings-test-root', 'MAIN TEST - Project Configuration');
+                        console.log('[WMPR-SETTINGS-004b] ✅ Main test component initialized!');
+                        
+                    } catch (error) {
+                        console.error('[WMPR-SETTINGS-005] Error initializing React settings component:', error);
+                        
+                        // Show error in main section
+                        const mainContainer = document.getElementById('main-settings-test-root');
+                        if (mainContainer) {
+                            mainContainer.innerHTML = '<div style="color: #FFD700; background: rgba(255,0,0,0.2); padding: 15px; border-radius: 8px;">❌ React Error: ' + error.message + '</div>';
+                        }
+                    }
+                } else {
+                    console.log('[WMPR-SETTINGS-006] WMPR Settings init function not found');
+                    
+                    // Show message in main section
+                    const mainContainer = document.getElementById('main-settings-test-root');
+                    if (mainContainer) {
+                        mainContainer.innerHTML = '<div style="color: #FFD700; font-size: 16px;">⚠️ React available but WMPR Settings bundle not loaded</div>';
+                    }
+                }
+            }
+            
+            // Test React availability
+            setTimeout(function() {
+                if (typeof window.React === 'undefined') {
+                    showFallback('window.React is undefined');
+                } else if (typeof window.ReactDOM === 'undefined') {
+                    showFallback('window.ReactDOM is undefined');
+                } else {
+                    showSuccess();
+                }
+            }, 2000); // Wait 2 seconds for resources to load
+        })();
     </script>
 </body>
 </html> 
