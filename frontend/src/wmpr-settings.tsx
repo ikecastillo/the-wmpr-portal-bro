@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 import Spinner from '@atlaskit/spinner';
 import Lozenge from '@atlaskit/lozenge';
 
+import 'wr-dependency!jira.webresources:util'
+
 // SIMPLE SETTINGS COMPONENT FOR TESTING
 console.log('[WMPR-SETTINGS-COMPONENT-001] ===== WMPR Settings Component Loading =====');
 
