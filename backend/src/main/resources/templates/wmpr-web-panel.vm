@@ -363,9 +363,25 @@ console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
         
         // Check if we're in Service Desk Portal context
         const isServiceDesk = window.location.pathname.includes('/servicedesk/');
-        
+
+        // =====================================================================================
+        // CRITICAL: SERVICE DESK PORTAL - REACT CONFLICT RESOLUTION
+        // =====================================================================================
+        // The Service Desk Portal environment has known compatibility issues with React,
+        // potentially due to multiple React versions or conflicting global event handlers
+        // (e.g., from jQuery or other Atlassian-specific JavaScript).
+        //
+        // To ensure stability and prevent UI breakages within the portal,
+        // we explicitly skip React initialization and fall back to a vanilla JavaScript
+        // implementation for the WMPR requests table in this specific context.
+        //
+        // If investigating these conflicts, consider:
+        //   - Checking loaded React versions (e.g., `window.React.version`).
+        //   - Inspecting event listeners on key DOM elements.
+        //   - Looking for errors in the browser console related to React or event handling.
+        // =====================================================================================
         if (isServiceDesk) {
-            console.log('[IKKKKKKE-TEMPLATE-087] Service Desk Portal detected - using vanilla JS (React has known issues in this context)');
+            console.log('[IKKKKKKE-TEMPLATE-087] Service Desk Portal context detected. Skipping React due to known conflicts. Falling back to vanilla JS. Developer note: Check React versions or event conflicts if further investigation is needed.');
             fallbackToVanillaJS();
             return;
         }

@@ -41,6 +41,7 @@
                         <phase>generate-resources</phase>
                         <configuration>
                             <arguments>install</arguments>
+                            <workingDirectory>.</workingDirectory>
                         </configuration>
                     </execution>
                     <execution>
@@ -48,8 +49,10 @@
                         <goals>
                             <goal>npm</goal>
                         </goals>
+                        <phase>generate-resources</phase>
                         <configuration>
                             <arguments>run build</arguments>
+                            <workingDirectory>.</workingDirectory>
                         </configuration>
                     </execution>
                 </executions>
