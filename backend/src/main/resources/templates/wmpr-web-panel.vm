@@ -5,8 +5,12 @@
 $webResourceManager.requireResource("com.atlassian.jira.plugins.jira-react-plugin:react")
 $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
 $webResourceManager.requireResource("jira.webresources:jira-global")
-## Load our React requests table bundle - designed for portal/sidebar context
-$webResourceManager.requireResource("com.example.wmpr.backend:entrypoint-wmprRequestsTable")
+$webResourceManager.requireResource("jira.webresources:util")
+$webResourceManager.requireResource("com.atlassian.auiplugin:aui-experimental-atlaskit-wrapper")
+## FIXED: Load our React requests table bundle with correct key
+$webResourceManager.requireResource("${atlassian.plugin.key}:entrypoint-wmprRequestsTable")
+## FALLBACK: Load manual fallback resource
+$webResourceManager.requireResource("${atlassian.plugin.key}:wmpr-manual-fallback")
 
 ## Service Desk Portal Strategy: Use vanilla JS due to React conflicts in this context
 
@@ -177,9 +181,18 @@ console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
         if (typeof window.initWMPRRequestsTable === 'function') {
             initFunction = window.initWMPRRequestsTable;
             console.log('[IKKKKKKE-TEMPLATE-066] Found function at window.initWMPRRequestsTable');
+        } else if (typeof window.WMPR_wmprRequestsTable === 'function') {
+            initFunction = window.WMPR_wmprRequestsTable;
+            console.log('[IKKKKKKE-TEMPLATE-066a] Found function at window.WMPR_wmprRequestsTable (webpack library)');
         } else if (typeof window.WMPR === 'object' && window.WMPR && typeof window.WMPR.initWMPRRequestsTable === 'function') {
             initFunction = window.WMPR.initWMPRRequestsTable;
             console.log('[IKKKKKKE-TEMPLATE-067] Found function at window.WMPR.initWMPRRequestsTable');
+        } else if (typeof window.WMPR === 'object' && window.WMPR && typeof window.WMPR.wmprRequestsTable === 'function') {
+            initFunction = window.WMPR.wmprRequestsTable;
+            console.log('[IKKKKKKE-TEMPLATE-067a] Found function at window.WMPR.wmprRequestsTable');
+        } else if (typeof window.wmprRequestsTable === 'function') {
+            initFunction = window.wmprRequestsTable;
+            console.log('[IKKKKKKE-TEMPLATE-067b] Found function at window.wmprRequestsTable');
         } else if (typeof window.WMPR === 'function') {
             // In case WMPR is the function itself
             initFunction = window.WMPR;

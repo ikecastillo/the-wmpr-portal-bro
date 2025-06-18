@@ -9,8 +9,12 @@
     $webResourceManager.requireResource("com.atlassian.jira.plugins.jira-react-plugin:react")
     $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
     $webResourceManager.requireResource("jira.webresources:jira-global")
-    ## Load our React settings bundle - designed specifically for admin context
-    $webResourceManager.requireResource("com.example.wmpr.backend:entrypoint-wmprSettings")
+    $webResourceManager.requireResource("jira.webresources:util")
+    $webResourceManager.requireResource("com.atlassian.auiplugin:aui-experimental-atlaskit-wrapper")
+    ## FIXED: Load our React settings bundle with correct key
+    $webResourceManager.requireResource("${atlassian.plugin.key}:entrypoint-wmprSettings")
+    ## FALLBACK: Load manual fallback resource
+    $webResourceManager.requireResource("${atlassian.plugin.key}:wmpr-manual-fallback")
     <style>
         .wmpr-settings-container {
             max-width: 800px;
@@ -340,15 +344,28 @@
             function showSuccess() {
                 console.log('[WMPR-SETTINGS-003] React available, initializing component...');
                 
-                // Try to initialize our React settings component in MAIN section
+                // Try to initialize our React settings component in MAIN section - check multiple exposure patterns
+                let initSettingsFunction = null;
+                
                 if (typeof window.initWMPRSettings === 'function') {
-                    console.log('[WMPR-SETTINGS-004] Found WMPR Settings init function, testing...');
+                    initSettingsFunction = window.initWMPRSettings;
+                    console.log('[WMPR-SETTINGS-004] Found WMPR Settings init function at window.initWMPRSettings');
+                } else if (typeof window.WMPR_wmprSettings === 'function') {
+                    initSettingsFunction = window.WMPR_wmprSettings;
+                    console.log('[WMPR-SETTINGS-004a] Found WMPR Settings init function at window.WMPR_wmprSettings (webpack library)');
+                } else if (typeof window.WMPR === 'object' && window.WMPR && typeof window.WMPR.initWMPRSettings === 'function') {
+                    initSettingsFunction = window.WMPR.initWMPRSettings;
+                    console.log('[WMPR-SETTINGS-004b] Found WMPR Settings init function at window.WMPR.initWMPRSettings');
+                }
+                
+                if (initSettingsFunction) {
+                    console.log('[WMPR-SETTINGS-004c] Found WMPR Settings init function, testing...');
                     
                     try {
                         // Initialize MAIN prominent test section
-                        console.log('[WMPR-SETTINGS-004a] Initializing MAIN test section...');
-                        window.initWMPRSettings('main-settings-test-root', 'ATLASKIT DEVELOPMENT TEST');
-                        console.log('[WMPR-SETTINGS-004b] ✅ Main test component initialized!');
+                        console.log('[WMPR-SETTINGS-004d] Initializing MAIN test section...');
+                        initSettingsFunction('main-settings-test-root', 'ATLASKIT DEVELOPMENT TEST');
+                        console.log('[WMPR-SETTINGS-004e] ✅ Main test component initialized!');
                         
                     } catch (error) {
                         console.error('[WMPR-SETTINGS-005] Error initializing React settings component:', error);

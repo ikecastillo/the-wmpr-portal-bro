@@ -123,25 +123,8 @@ module.exports = (_, { mode }) => {
                         'atl.general'  // General context for testing
                     ]  // Settings component for project configuration
                 },
-                // CRITICAL: Add dependencies that were missing from auto-generated resources
-                dependencies: {
-                    'wmprRequestsTable': [
-                        'com.atlassian.plugins.atlassian-plugins-webresource-plugin:context-path',
-                        'com.atlassian.auiplugin:ajs',
-                        'jira.webresources:util',
-                        'jira.webresources:jira-global',
-                        'com.atlassian.jira.plugins.jira-react-plugin:react',
-                        'com.atlassian.auiplugin:aui-experimental-atlaskit-wrapper'
-                    ],
-                    'wmprSettings': [
-                        'com.atlassian.plugins.atlassian-plugins-webresource-plugin:context-path',
-                        'com.atlassian.auiplugin:ajs',
-                        'jira.webresources:util',
-                        'jira.webresources:jira-global',
-                        'com.atlassian.jira.plugins.jira-react-plugin:react',
-                        'com.atlassian.auiplugin:aui-experimental-atlaskit-wrapper'
-                    ]
-                },
+                // REMOVE: dependencies property doesn't seem to work with this version of WrmPlugin
+                // Will rely on manual fallback web resource in atlassian-plugin.xml instead
                 // Jira provides these dependencies
                 providedDependencies: {
                     'AJS': {
@@ -166,10 +149,11 @@ module.exports = (_, { mode }) => {
         output: {
             filename: 'bundled.[name].js', // Hardcoded filename for consistent loading
             path: path.resolve("../backend/src/main/resources/frontend"),
-            // UPDATED: Improved library exposure for reliable component access
+            // FIXED: Simpler library exposure that should work more reliably
             library: {
-                name: ['WMPR', '[name]'],
-                type: 'window'
+                name: 'WMPR_[name]',
+                type: 'window',
+                export: 'default'
             },
             globalObject: 'window',
             // Ensure proper chunk loading

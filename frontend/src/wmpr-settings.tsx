@@ -16,6 +16,7 @@ declare global {
         };
         WMPR?: any;
         initWMPRSettings?: any;
+        WMPR_wmprSettings?: any;
         define?: any;
     }
     var define: any;
@@ -268,11 +269,26 @@ const initWMPRSettings = (containerId: string, message?: string): void => {
     }
 };
 
-// ENHANCED: Multiple exposure patterns for maximum compatibility
-(window as any).initWMPRSettings = initWMPRSettings;
-(window as any).WMPR = (window as any).WMPR || {};
-(window as any).WMPR.initWMPRSettings = initWMPRSettings;
-(window as any).WMPR.wmprSettings = { initWMPRSettings };
+// Global exposure for multiple access patterns
+if (typeof window !== 'undefined') {
+    // Strategy 1: Direct window exposure
+    window.initWMPRSettings = initWMPRSettings;
+    
+    // Strategy 2: WMPR namespace
+    if (!window.WMPR) {
+        window.WMPR = {};
+    }
+    window.WMPR.initWMPRSettings = initWMPRSettings;
+    
+    // Strategy 3: New webpack library exposure pattern
+    window.WMPR_wmprSettings = initWMPRSettings;
+    
+    console.log('[WMPR-SETTINGS-007] Global functions exposed:', {
+        'window.initWMPRSettings': typeof window.initWMPRSettings,
+        'window.WMPR.initWMPRSettings': typeof window.WMPR?.initWMPRSettings,
+        'window.WMPR_wmprSettings': typeof window.WMPR_wmprSettings
+    });
+}
 
 // AMD/RequireJS compatibility
 if (typeof window.define === 'function' && window.define.amd) {

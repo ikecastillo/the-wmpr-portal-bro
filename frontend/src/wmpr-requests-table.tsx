@@ -413,6 +413,7 @@ declare global {
         initWMPRRequestsTable?: any;
         WMPR?: any;
         wmprRequestsTable?: any;
+        WMPR_wmprRequestsTable?: any;
     }
 }
 
@@ -429,11 +430,15 @@ if (typeof window !== 'undefined') {
     window.WMPR.initWMPRRequestsTable = initWMPRRequestsTable;
     window.WMPR.wmprRequestsTable = initWMPRRequestsTable;
     
+    // Strategy 3: New webpack library exposure pattern
+    window.WMPR_wmprRequestsTable = initWMPRRequestsTable;
+    
     console.log('[WMPR-REQUESTS-007] Global functions exposed:', {
         'window.initWMPRRequestsTable': typeof window.initWMPRRequestsTable,
         'window.wmprRequestsTable': typeof window.wmprRequestsTable,
         'window.WMPR.initWMPRRequestsTable': typeof window.WMPR?.initWMPRRequestsTable,
-        'window.WMPR.wmprRequestsTable': typeof window.WMPR?.wmprRequestsTable
+        'window.WMPR.wmprRequestsTable': typeof window.WMPR?.wmprRequestsTable,
+        'window.WMPR_wmprRequestsTable': typeof window.WMPR_wmprRequestsTable
     });
 }
 
