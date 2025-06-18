@@ -31,8 +31,14 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
+    "build:watch": "webpack --mode development --watch",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "analyze": "webpack-bundle-analyzer ../backend/src/main/resources/frontend/bundled.*.js",
+    "clean": "rm -rf ../backend/src/main/resources/frontend/bundled.*",
+    "verify": "echo 'Checking bundled files...' && ls -la ../backend/src/main/resources/frontend/",
+    "atlaskit-test": "npm run build && npm run verify"
   },
   "eslintConfig": {
     "extends": [

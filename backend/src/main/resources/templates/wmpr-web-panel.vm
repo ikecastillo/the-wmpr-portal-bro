@@ -365,33 +365,62 @@ console.log('[IKKKKKKE-TEMPLATE-054] WMPR Template Script Loading Started');
         const isServiceDesk = window.location.pathname.includes('/servicedesk/');
 
         // =====================================================================================
-        // CRITICAL: SERVICE DESK PORTAL - REACT CONFLICT RESOLUTION
+        // UPDATED: TEST REACT COMPATIBILITY INSTEAD OF BLANKET SKIPPING
         // =====================================================================================
-        // The Service Desk Portal environment has known compatibility issues with React,
-        // potentially due to multiple React versions or conflicting global event handlers
-        // (e.g., from jQuery or other Atlassian-specific JavaScript).
-        //
-        // To ensure stability and prevent UI breakages within the portal,
-        // we explicitly skip React initialization and fall back to a vanilla JavaScript
-        // implementation for the WMPR requests table in this specific context.
-        //
-        // If investigating these conflicts, consider:
-        //   - Checking loaded React versions (e.g., `window.React.version`).
-        //   - Inspecting event listeners on key DOM elements.
-        //   - Looking for errors in the browser console related to React or event handling.
+        // Instead of immediately falling back in Service Desk, test if React is available
+        // and functional. This allows AtlasKit development while maintaining fallback safety.
         // =====================================================================================
-        if (isServiceDesk) {
-            console.log('[IKKKKKKE-TEMPLATE-087] Service Desk Portal context detected. Skipping React due to known conflicts. Falling back to vanilla JS. Developer note: Check React versions or event conflicts if further investigation is needed.');
-            fallbackToVanillaJS();
-            return;
+        
+        function testReactCompatibility() {
+            console.log('[IKKKKKKE-TEMPLATE-087] Testing React compatibility...');
+            
+            // Test 1: React and ReactDOM availability
+            if (typeof window.React === 'undefined' || typeof window.ReactDOM === 'undefined') {
+                console.log('[IKKKKKKE-TEMPLATE-087a] React/ReactDOM not available');
+                return false;
+            }
+            
+            // Test 2: React version compatibility
+            const reactVersion = window.React.version;
+            console.log('[IKKKKKKE-TEMPLATE-087b] React version:', reactVersion);
+            
+            // Test 3: AtlasKit external dependencies
+            const atlaskitTest = window.AJS && window.AJS.AtlasKit;
+            console.log('[IKKKKKKE-TEMPLATE-087c] AtlasKit available:', !!atlaskitTest);
+            
+            // Test 4: Basic React rendering test
+            try {
+                const testDiv = document.createElement('div');
+                testDiv.id = 'react-compatibility-test';
+                testDiv.style.display = 'none';
+                document.body.appendChild(testDiv);
+                
+                window.ReactDOM.render(
+                    window.React.createElement('div', null, 'test'),
+                    testDiv
+                );
+                
+                document.body.removeChild(testDiv);
+                console.log('[IKKKKKKE-TEMPLATE-087d] React render test passed');
+                return true;
+            } catch (error) {
+                console.error('[IKKKKKKE-TEMPLATE-087e] React render test failed:', error);
+                return false;
+            }
         }
         
-        // Only try React in non-Service Desk contexts
-        if (typeof window.React !== 'undefined' && typeof window.ReactDOM !== 'undefined') {
-            console.log('[IKKKKKKE-TEMPLATE-088] React dependencies loaded, starting component initialization');
+        // Test React compatibility regardless of context
+        const reactCompatible = testReactCompatibility();
+        
+        if (reactCompatible) {
+            console.log('[IKKKKKKE-TEMPLATE-088] React compatibility confirmed, starting component initialization');
             setTimeout(initWMPRReactComponent, 1000);
         } else {
-            console.log('[IKKKKKKE-TEMPLATE-089] React dependencies not available, falling back to vanilla JS');
+            if (isServiceDesk) {
+                console.log('[IKKKKKKE-TEMPLATE-089] Service Desk Portal context + React incompatibility detected. Using vanilla JS for stability.');
+            } else {
+                console.log('[IKKKKKKE-TEMPLATE-089] React incompatibility detected in general context. Using vanilla JS fallback.');
+            }
             fallbackToVanillaJS();
         }
     }

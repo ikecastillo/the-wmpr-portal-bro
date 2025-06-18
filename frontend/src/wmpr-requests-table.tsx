@@ -9,6 +9,19 @@ import 'wr-dependency!jira.webresources:util'
 // IKKKKKKE-COMPONENT-002 - React Component Loading Check
 console.log('[IKKKKKKE-COMPONENT-002] WMPR React Component Module Loading Started');
 
+// TypeScript declarations for global objects
+declare global {
+    interface Window {
+        AJS?: {
+            AtlasKit?: any;
+        };
+        WMPR?: any;
+        initWMPRRequestsTable?: any;
+        define?: any;
+    }
+    var define: any;
+}
+
 interface ServiceDeskRequest {
     key: string;
     summary: string;
@@ -31,6 +44,72 @@ interface APIResponse {
     };
     error?: string;
     requestId?: string;
+}
+
+// Add Error Boundary for React Components
+class WMPRErrorBoundary extends React.Component<
+    { children: React.ReactNode },
+    { hasError: boolean; error: Error | null; errorInfo: any }
+> {
+    constructor(props: { children: React.ReactNode }) {
+        super(props);
+        this.state = { hasError: false, error: null, errorInfo: null };
+    }
+
+    static getDerivedStateFromError(error: Error) {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error: Error, errorInfo: any) {
+        console.error('[IKKKKKKE-ERROR-BOUNDARY] React Error Caught:', error);
+        console.error('[IKKKKKKE-ERROR-BOUNDARY] Error Info:', errorInfo);
+        this.setState({ error, errorInfo });
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div style={{
+                    padding: '20px',
+                    backgroundColor: '#FFEBE6',
+                    border: '2px solid #DE350B',
+                    borderRadius: '8px',
+                    color: '#DE350B',
+                    fontFamily: 'Arial, sans-serif'
+                }}>
+                    <h3>⚠️ React Component Error</h3>
+                    <p><strong>Error:</strong> {this.state.error?.message || 'Unknown error'}</p>
+                    <details style={{ marginTop: '10px' }}>
+                        <summary>Error Details</summary>
+                        <pre style={{ background: '#f5f5f5', padding: '10px', fontSize: '11px', overflow: 'auto' }}>
+                            {this.state.error?.stack || 'No stack trace available'}
+                        </pre>
+                        {this.state.errorInfo && (
+                            <pre style={{ background: '#f5f5f5', padding: '10px', fontSize: '11px', overflow: 'auto' }}>
+                                {JSON.stringify(this.state.errorInfo, null, 2)}
+                            </pre>
+                        )}
+                    </details>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        style={{
+                            marginTop: '10px',
+                            padding: '8px 16px',
+                            backgroundColor: '#0052CC',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Reload Page
+                    </button>
+                </div>
+            );
+        }
+
+        return this.props.children;
+    }
 }
 
 const WMPRRequestsTable: React.FC = () => {
@@ -304,6 +383,16 @@ const initWMPRRequestsTable = (elementId: string): void => {
     console.log('[IKKKKKKE-INIT-020] Global React:', typeof window.React);
     console.log('[IKKKKKKE-INIT-021] Global ReactDOM:', typeof window.ReactDOM);
     
+    // Enhanced dependency checking
+    console.log('[IKKKKKKE-INIT-021a] AtlasKit DynamicTable:', typeof DynamicTable);
+    console.log('[IKKKKKKE-INIT-021b] AtlasKit Spinner:', typeof Spinner);
+    console.log('[IKKKKKKE-INIT-021c] AtlasKit Lozenge:', typeof Lozenge);
+    
+    // Check for alternative AtlasKit paths
+    if (typeof window.AJS !== 'undefined' && window.AJS.AtlasKit) {
+        console.log('[IKKKKKKE-INIT-021d] AJS.AtlasKit available:', Object.keys(window.AJS.AtlasKit));
+    }
+    
     const container = document.getElementById(elementId);
     if (!container) {
         console.error('[IKKKKKKE-INIT-022] Container element not found:', elementId);
@@ -316,7 +405,7 @@ const initWMPRRequestsTable = (elementId: string): void => {
 
     try {
         console.log('[IKKKKKKE-INIT-026] Starting React component render...');
-        ReactDOM.render(<WMPRRequestsTable />, container);
+        ReactDOM.render(<WMPRErrorBoundary><WMPRRequestsTable /></WMPRErrorBoundary>, container);
         console.log('[IKKKKKKE-INIT-027] ===== REACT COMPONENT RENDERED SUCCESSFULLY =====');
     } catch (error) {
         console.error('[IKKKKKKE-INIT-028] ===== ERROR DURING RENDERING =====');
@@ -339,8 +428,23 @@ const initWMPRRequestsTable = (elementId: string): void => {
     }
 };
 
-// CRITICAL FIX: Expose function to global window object immediately
+// ENHANCED: Multiple exposure patterns for maximum compatibility
 (window as any).initWMPRRequestsTable = initWMPRRequestsTable;
+(window as any).WMPR = (window as any).WMPR || {};
+(window as any).WMPR.initWMPRRequestsTable = initWMPRRequestsTable;
+(window as any).WMPR.wmprRequestsTable = { initWMPRRequestsTable };
+
+// AMD/RequireJS compatibility
+if (typeof define === 'function' && define.amd) {
+    define('wmpr-requests-table', [], function() {
+        return { initWMPRRequestsTable };
+    });
+}
+
+// CommonJS compatibility
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { initWMPRRequestsTable };
+}
 
 console.log('[IKKKKKKE-MODULE-032] ===== MODULE INITIALIZATION =====');
 console.log('[IKKKKKKE-MODULE-033] Module loaded successfully');

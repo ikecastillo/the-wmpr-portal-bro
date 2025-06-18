@@ -45,15 +45,55 @@ module.exports = (_, { mode }) => {
         externals: {
             'react': 'React',
             'react-dom': 'ReactDOM',
-            // Use Jira's existing AtlasKit components
-            '@atlaskit/button': ['AJS', 'AtlasKit', 'Button'],
-            '@atlaskit/spinner': ['AJS', 'AtlasKit', 'Spinner'], 
-            '@atlaskit/lozenge': ['AJS', 'AtlasKit', 'Lozenge'],
-            '@atlaskit/textfield': ['AJS', 'AtlasKit', 'TextField'],
-            '@atlaskit/form': ['AJS', 'AtlasKit', 'Form'],
-            '@atlaskit/select': ['AJS', 'AtlasKit', 'Select'],
-            '@atlaskit/toggle': ['AJS', 'AtlasKit', 'Toggle'],
-            '@atlaskit/dynamic-table': ['AJS', 'AtlasKit', 'DynamicTable']
+            // UPDATED: More reliable AtlasKit external mappings
+            '@atlaskit/button': {
+                root: ['AJS', 'AtlasKit', 'Button'],
+                commonjs: '@atlaskit/button',
+                commonjs2: '@atlaskit/button',
+                amd: '@atlaskit/button'
+            },
+            '@atlaskit/spinner': {
+                root: ['AJS', 'AtlasKit', 'Spinner'],
+                commonjs: '@atlaskit/spinner',
+                commonjs2: '@atlaskit/spinner',
+                amd: '@atlaskit/spinner'
+            },
+            '@atlaskit/lozenge': {
+                root: ['AJS', 'AtlasKit', 'Lozenge'],
+                commonjs: '@atlaskit/lozenge',
+                commonjs2: '@atlaskit/lozenge',
+                amd: '@atlaskit/lozenge'
+            },
+            '@atlaskit/textfield': {
+                root: ['AJS', 'AtlasKit', 'TextField'],
+                commonjs: '@atlaskit/textfield',
+                commonjs2: '@atlaskit/textfield',
+                amd: '@atlaskit/textfield'
+            },
+            '@atlaskit/form': {
+                root: ['AJS', 'AtlasKit', 'Form'],
+                commonjs: '@atlaskit/form',
+                commonjs2: '@atlaskit/form',
+                amd: '@atlaskit/form'
+            },
+            '@atlaskit/select': {
+                root: ['AJS', 'AtlasKit', 'Select'],
+                commonjs: '@atlaskit/select',
+                commonjs2: '@atlaskit/select',
+                amd: '@atlaskit/select'
+            },
+            '@atlaskit/toggle': {
+                root: ['AJS', 'AtlasKit', 'Toggle'],
+                commonjs: '@atlaskit/toggle',
+                commonjs2: '@atlaskit/toggle',
+                amd: '@atlaskit/toggle'
+            },
+            '@atlaskit/dynamic-table': {
+                root: ['AJS', 'AtlasKit', 'DynamicTable'],
+                commonjs: '@atlaskit/dynamic-table',
+                commonjs2: '@atlaskit/dynamic-table',
+                amd: '@atlaskit/dynamic-table'
+            }
         },
         plugins: [
             // Add tracking identifier banner
@@ -64,7 +104,7 @@ module.exports = (_, { mode }) => {
             }),
             new WrmPlugin({
                 watch,
-                locationPrefix: '/frontend/',
+                locationPrefix: '/frontend',
                 pluginKey: 'com.example.wmpr.backend',
                 xmlDescriptors: xmlOutPath,
                 contextMap: {
@@ -100,14 +140,16 @@ module.exports = (_, { mode }) => {
         output: {
             filename: 'bundled.[name].js', // Hardcoded filename for consistent loading
             path: path.resolve("../backend/src/main/resources/frontend"),
-            // CRITICAL FIX: Properly expose our initialization function
+            // UPDATED: Improved library exposure for reliable component access
             library: {
-                name: 'WMPR',
-                type: 'window',
-                export: 'default'
+                name: ['WMPR', '[name]'],
+                type: 'window'
             },
+            globalObject: 'window',
             // Ensure proper chunk loading
-            chunkLoadingGlobal: 'webpackChunkWMPR'
+            chunkLoadingGlobal: 'webpackChunkWMPR',
+            // Add clean option for consistent builds
+            clean: true
         },
         // Performance budgets to catch large bundles
         performance: {

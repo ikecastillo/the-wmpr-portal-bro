@@ -155,10 +155,10 @@
         border: 3px solid #FFD700;
     ">
         <h1 style="margin: 0 0 15px 0; font-size: 28px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
-            🚀 REACT COMPONENT TEST AREA 🚀
+            🚀 ATLASKIT COMPONENT TEST AREA 🚀
         </h1>
         <p style="margin: 0 0 20px 0; font-size: 18px; opacity: 0.9;">
-            If React is working, you'll see an interactive component below:
+            Testing React + AtlasKit Components for Plugin Development
         </p>
         <div id="main-settings-test-root" style="
             background: rgba(255,255,255,0.1);
@@ -174,6 +174,28 @@
             <div style="color: #FFD700; font-size: 16px; font-weight: bold;">
                 ⏳ Loading React Component...
             </div>
+        </div>
+    </div>
+
+    <!-- DIAGNOSTIC INFORMATION PANEL -->
+    <div id="diagnostic-panel" style="
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px;
+        font-family: monospace;
+        font-size: 12px;
+    ">
+        <h3 style="margin: 0 0 15px 0; color: #495057;">🔍 AtlasKit Development Diagnostics</h3>
+        <div id="diagnostic-content">
+            <p><strong>Page Load:</strong> <span id="diag-timestamp">Loading...</span></p>
+            <p><strong>React Available:</strong> <span id="diag-react">Checking...</span></p>
+            <p><strong>ReactDOM Available:</strong> <span id="diag-reactdom">Checking...</span></p>
+            <p><strong>AJS Available:</strong> <span id="diag-ajs">Checking...</span></p>
+            <p><strong>AtlasKit Available:</strong> <span id="diag-atlaskit">Checking...</span></p>
+            <p><strong>WMPR Functions:</strong> <span id="diag-wmpr">Checking...</span></p>
+            <p><strong>Bundle Status:</strong> <span id="diag-bundle">Loading...</span></p>
         </div>
     </div>
 
@@ -255,11 +277,63 @@
         (function testReactAvailability() {
             console.log('[WMPR-SETTINGS-001] Starting React availability test...');
             
+            // Update diagnostic panel
+            function updateDiagnostic(id, value, isError = false) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
+                    element.style.color = isError ? '#dc3545' : '#28a745';
+                    element.style.fontWeight = 'bold';
+                }
+            }
+            
+            // Initial timestamp
+            updateDiagnostic('diag-timestamp', new Date().toISOString());
+            
+            function performDiagnostics() {
+                console.log('[WMPR-SETTINGS-DIAG] Performing comprehensive diagnostics...');
+                
+                // React checks
+                const reactAvailable = typeof window.React !== 'undefined';
+                updateDiagnostic('diag-react', reactAvailable ? `✅ ${window.React?.version || 'unknown'}` : '❌ Not Found', !reactAvailable);
+                
+                const reactDOMAvailable = typeof window.ReactDOM !== 'undefined';
+                updateDiagnostic('diag-reactdom', reactDOMAvailable ? '✅ Available' : '❌ Not Found', !reactDOMAvailable);
+                
+                // AJS checks
+                const ajsAvailable = typeof window.AJS !== 'undefined';
+                updateDiagnostic('diag-ajs', ajsAvailable ? '✅ Available' : '❌ Not Found', !ajsAvailable);
+                
+                // AtlasKit checks
+                const atlaskitAvailable = ajsAvailable && window.AJS.AtlasKit;
+                if (atlaskitAvailable) {
+                    const components = Object.keys(window.AJS.AtlasKit);
+                    updateDiagnostic('diag-atlaskit', `✅ ${components.length} components: ${components.slice(0, 3).join(', ')}${components.length > 3 ? '...' : ''}`);
+                } else {
+                    updateDiagnostic('diag-atlaskit', '❌ AJS.AtlasKit Not Found', true);
+                }
+                
+                // WMPR function checks
+                const wmprFunctions = [];
+                if (typeof window.initWMPRSettings === 'function') wmprFunctions.push('initWMPRSettings');
+                if (typeof window.initWMPRRequestsTable === 'function') wmprFunctions.push('initWMPRRequestsTable');
+                if (window.WMPR) wmprFunctions.push('WMPR object');
+                
+                updateDiagnostic('diag-wmpr', wmprFunctions.length > 0 ? `✅ ${wmprFunctions.join(', ')}` : '❌ No WMPR functions found', wmprFunctions.length === 0);
+                
+                // Bundle status
+                const scripts = Array.from(document.scripts);
+                const wmprScripts = scripts.filter(s => s.src && s.src.includes('wmpr'));
+                updateDiagnostic('diag-bundle', wmprScripts.length > 0 ? `✅ ${wmprScripts.length} bundles loaded` : '❌ No WMPR bundles found', wmprScripts.length === 0);
+                
+                return { reactAvailable, reactDOMAvailable, ajsAvailable, atlaskitAvailable, wmprFunctions: wmprFunctions.length > 0 };
+            }
+            
             function showFallback(reason) {
                 console.log('[WMPR-SETTINGS-002] React not available:', reason);
                 const mainContainer = document.getElementById('main-settings-test-root');
                 if (mainContainer) {
-                    mainContainer.innerHTML = '<div style="color: #FFD700; font-size: 16px;">❌ React NOT available: ' + reason + '</div>';
+                    mainContainer.innerHTML = '<div style="color: #FFD700; font-size: 16px;">❌ ' + reason + '</div>';
                 }
             }
             
@@ -273,7 +347,7 @@
                     try {
                         // Initialize MAIN prominent test section
                         console.log('[WMPR-SETTINGS-004a] Initializing MAIN test section...');
-                        window.initWMPRSettings('main-settings-test-root', 'MAIN TEST - Project Configuration');
+                        window.initWMPRSettings('main-settings-test-root', 'ATLASKIT DEVELOPMENT TEST');
                         console.log('[WMPR-SETTINGS-004b] ✅ Main test component initialized!');
                         
                     } catch (error) {
@@ -296,16 +370,26 @@
                 }
             }
             
-            // Test React availability
+            // Perform diagnostics immediately
+            const initialDiagnostics = performDiagnostics();
+            
+            // Test React availability with enhanced checks
             setTimeout(function() {
-                if (typeof window.React === 'undefined') {
-                    showFallback('window.React is undefined');
-                } else if (typeof window.ReactDOM === 'undefined') {
-                    showFallback('window.ReactDOM is undefined');
+                const finalDiagnostics = performDiagnostics();
+                
+                if (!finalDiagnostics.reactAvailable) {
+                    showFallback('React is not available (window.React is undefined)');
+                } else if (!finalDiagnostics.reactDOMAvailable) {
+                    showFallback('ReactDOM is not available (window.ReactDOM is undefined)');
+                } else if (!finalDiagnostics.ajsAvailable) {
+                    showFallback('AJS is not available - AtlasKit components may not work');
                 } else {
                     showSuccess();
                 }
-            }, 2000); // Wait 2 seconds for resources to load
+            }, 3000); // Wait 3 seconds for all resources to load
+            
+            // Periodic diagnostics update
+            setInterval(performDiagnostics, 5000);
         })();
     </script>
 </body>

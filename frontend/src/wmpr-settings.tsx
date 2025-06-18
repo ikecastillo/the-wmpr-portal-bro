@@ -8,6 +8,80 @@ import 'wr-dependency!jira.webresources:util'
 // SIMPLE SETTINGS COMPONENT FOR TESTING
 console.log('[WMPR-SETTINGS-COMPONENT-001] ===== WMPR Settings Component Loading =====');
 
+// TypeScript declarations for global objects
+declare global {
+    interface Window {
+        AJS?: {
+            AtlasKit?: any;
+        };
+        WMPR?: any;
+        initWMPRSettings?: any;
+        define?: any;
+    }
+    var define: any;
+}
+
+// Add Error Boundary for React Components
+class WMPRSettingsErrorBoundary extends React.Component<
+    { children: React.ReactNode },
+    { hasError: boolean; error: Error | null; errorInfo: any }
+> {
+    constructor(props: { children: React.ReactNode }) {
+        super(props);
+        this.state = { hasError: false, error: null, errorInfo: null };
+    }
+
+    static getDerivedStateFromError(error: Error) {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error: Error, errorInfo: any) {
+        console.error('[WMPR-SETTINGS-ERROR-BOUNDARY] React Error Caught:', error);
+        console.error('[WMPR-SETTINGS-ERROR-BOUNDARY] Error Info:', errorInfo);
+        this.setState({ error, errorInfo });
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div style={{
+                    padding: '20px',
+                    backgroundColor: '#FFEBE6',
+                    border: '2px solid #DE350B',
+                    borderRadius: '8px',
+                    color: '#DE350B',
+                    fontFamily: 'Arial, sans-serif'
+                }}>
+                    <h3>⚠️ React Settings Component Error</h3>
+                    <p><strong>Error:</strong> {this.state.error?.message || 'Unknown error'}</p>
+                    <details style={{ marginTop: '10px' }}>
+                        <summary>Error Details</summary>
+                        <pre style={{ background: '#f5f5f5', padding: '10px', fontSize: '11px', overflow: 'auto' }}>
+                            {this.state.error?.stack || 'No stack trace available'}
+                        </pre>
+                    </details>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        style={{
+                            marginTop: '10px',
+                            padding: '8px 16px',
+                            backgroundColor: '#0052CC',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Reload Page
+                    </button>
+                </div>
+            );
+        }
+
+        return this.props.children;
+    }
+}
+
 interface WMPRSettingsTestProps {
     message?: string;
 }
@@ -141,6 +215,15 @@ const initWMPRSettings = (containerId: string, message?: string): void => {
     console.log('[WMPR-SETTINGS-INIT-007] React version:', React.version);
     console.log('[WMPR-SETTINGS-INIT-008] ReactDOM available:', typeof ReactDOM);
     
+    // Enhanced dependency checking
+    console.log('[WMPR-SETTINGS-INIT-008a] AtlasKit Spinner:', typeof Spinner);
+    console.log('[WMPR-SETTINGS-INIT-008b] AtlasKit Lozenge:', typeof Lozenge);
+    
+    // Check for alternative AtlasKit paths
+    if (typeof window.AJS !== 'undefined' && window.AJS?.AtlasKit) {
+        console.log('[WMPR-SETTINGS-INIT-008c] AJS.AtlasKit available:', Object.keys(window.AJS.AtlasKit));
+    }
+    
     const container = document.getElementById(containerId);
     if (!container) {
         console.error('[WMPR-SETTINGS-INIT-009] ❌ Container not found:', containerId);
@@ -154,7 +237,9 @@ const initWMPRSettings = (containerId: string, message?: string): void => {
     try {
         console.log('[WMPR-SETTINGS-INIT-012] Starting React render...');
         ReactDOM.render(
-            <WMPRSettingsTest message={message} />, 
+            <WMPRSettingsErrorBoundary>
+                <WMPRSettingsTest message={message} />
+            </WMPRSettingsErrorBoundary>, 
             container
         );
         console.log('[WMPR-SETTINGS-INIT-013] ✅ ===== REACT COMPONENT RENDERED SUCCESSFULLY =====');
@@ -183,14 +268,26 @@ const initWMPRSettings = (containerId: string, message?: string): void => {
     }
 };
 
-// EXPOSE TO GLOBAL SCOPE
+// ENHANCED: Multiple exposure patterns for maximum compatibility
 (window as any).initWMPRSettings = initWMPRSettings;
+(window as any).WMPR = (window as any).WMPR || {};
+(window as any).WMPR.initWMPRSettings = initWMPRSettings;
+(window as any).WMPR.wmprSettings = { initWMPRSettings };
+
+// AMD/RequireJS compatibility
+if (typeof window.define === 'function' && window.define.amd) {
+    window.define('wmpr-settings', [], function() {
+        return { initWMPRSettings };
+    });
+}
+
+// CommonJS compatibility
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { initWMPRSettings };
+}
 
 console.log('[WMPR-SETTINGS-MODULE-016] ===== MODULE LOADED =====');
 console.log('[WMPR-SETTINGS-MODULE-017] initWMPRSettings function exposed');
 console.log('[WMPR-SETTINGS-MODULE-018] Function available:', typeof (window as any).initWMPRSettings);
-
-// Export for webpack
-export default { initWMPRSettings };
 
 console.log('[WMPR-SETTINGS-MODULE-019] ===== MODULE EXPORT COMPLETE ====='); 
