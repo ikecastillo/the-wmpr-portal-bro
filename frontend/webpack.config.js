@@ -52,7 +52,8 @@ module.exports = (_, { mode }) => {
             '@atlaskit/textfield': ['AJS', 'AtlasKit', 'TextField'],
             '@atlaskit/form': ['AJS', 'AtlasKit', 'Form'],
             '@atlaskit/select': ['AJS', 'AtlasKit', 'Select'],
-            '@atlaskit/toggle': ['AJS', 'AtlasKit', 'Toggle']
+            '@atlaskit/toggle': ['AJS', 'AtlasKit', 'Toggle'],
+            '@atlaskit/dynamic-table': ['AJS', 'AtlasKit', 'DynamicTable']
         },
         plugins: [
             // Add tracking identifier banner
