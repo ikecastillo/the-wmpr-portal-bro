@@ -46,6 +46,13 @@ interface APIResponse {
     requestId?: string;
 }
 
+// Configuration interface
+interface WMPRConfig {
+    maxRequests?: number;
+    showStatus?: boolean;
+    theme?: 'light' | 'dark';
+}
+
 // Add Error Boundary for React Components
 class WMPRErrorBoundary extends React.Component<
     { children: React.ReactNode },
@@ -112,7 +119,11 @@ class WMPRErrorBoundary extends React.Component<
     }
 }
 
-const WMPRRequestsTable: React.FC = () => {
+const WMPRRequestsTable: React.FC<WMPRConfig> = ({ 
+    maxRequests = 10, 
+    showStatus = true, 
+    theme = 'light' 
+}) => {
     const [requests, setRequests] = useState<ServiceDeskRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -374,85 +385,66 @@ const WMPRRequestsTable: React.FC = () => {
     );
 };
 
-// CRITICAL FIX: Enhanced initialization function with comprehensive tracking
-const initWMPRRequestsTable = (elementId: string): void => {
-    console.log('[IKKKKKKE-INIT-016] ===== INITIALIZATION STARTED =====');
-    console.log('[IKKKKKKE-INIT-017] Element ID:', elementId);
-    console.log('[IKKKKKKE-INIT-018] React version:', React.version);
-    console.log('[IKKKKKKE-INIT-019] ReactDOM available:', typeof ReactDOM);
-    console.log('[IKKKKKKE-INIT-020] Global React:', typeof window.React);
-    console.log('[IKKKKKKE-INIT-021] Global ReactDOM:', typeof window.ReactDOM);
-    
-    // Enhanced dependency checking
-    console.log('[IKKKKKKE-INIT-021a] AtlasKit DynamicTable:', typeof DynamicTable);
-    console.log('[IKKKKKKE-INIT-021b] AtlasKit Spinner:', typeof Spinner);
-    console.log('[IKKKKKKE-INIT-021c] AtlasKit Lozenge:', typeof Lozenge);
-    
-    // Check for alternative AtlasKit paths
-    if (typeof window.AJS !== 'undefined' && window.AJS.AtlasKit) {
-        console.log('[IKKKKKKE-INIT-021d] AJS.AtlasKit available:', Object.keys(window.AJS.AtlasKit));
-    }
-    
-    const container = document.getElementById(elementId);
-    if (!container) {
-        console.error('[IKKKKKKE-INIT-022] Container element not found:', elementId);
-        console.log('[IKKKKKKE-INIT-023] Available elements with IDs:', Array.from(document.querySelectorAll('[id]')).map(el => el.id));
-        return;
-    }
-
-    console.log('[IKKKKKKE-INIT-024] Container found:', container);
-    console.log('[IKKKKKKE-INIT-025] Container innerHTML before render:', container.innerHTML.substring(0, 100));
-
+// Render the component
+const initWMPRRequestsTable = (containerId: string, config: WMPRConfig = {}) => {
     try {
-        console.log('[IKKKKKKE-INIT-026] Starting React component render...');
-        ReactDOM.render(<WMPRErrorBoundary><WMPRRequestsTable /></WMPRErrorBoundary>, container);
-        console.log('[IKKKKKKE-INIT-027] ===== REACT COMPONENT RENDERED SUCCESSFULLY =====');
+        console.log('[WMPR-REQUESTS-003] Initializing WMPR Requests Table', { containerId, config });
+        
+        const container = document.getElementById(containerId);
+        if (!container) {
+            console.error('[WMPR-REQUESTS-004] Container not found:', containerId);
+            return null;
+        }
+
+        // Use React 16 compatible ReactDOM.render
+        ReactDOM.render(<WMPRErrorBoundary><WMPRRequestsTable {...config} /></WMPRErrorBoundary>, container);
+        
+        console.log('[WMPR-REQUESTS-005] Component rendered successfully');
+        return { container };
     } catch (error) {
-        console.error('[IKKKKKKE-INIT-028] ===== ERROR DURING RENDERING =====');
-        console.error('[IKKKKKKE-INIT-029] Error details:', error);
-        
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
-        
-        console.error('[IKKKKKKE-INIT-030] Error stack:', errorStack);
-        
-        container.innerHTML = '<div style="color: red; padding: 15px; background: #ffebe6; border: 1px solid #ff5630; border-radius: 3px; font-size: 12px;">' +
-            '<h4 style="margin: 0 0 10px 0;">React Component Error - IKKKKKKE-INIT-031</h4>' +
-            '<strong>Error:</strong> ' + errorMessage + '<br>' +
-            '<strong>Type:</strong> ' + typeof error + '<br>' +
-            '<details style="margin-top: 10px;"><summary>Stack Trace</summary>' +
-            '<pre style="background: #f5f5f5; padding: 5px; margin: 5px 0; font-size: 10px; overflow: auto;">' +
-            errorStack +
-            '</pre></details>' +
-            '</div>';
+        console.error('[WMPR-REQUESTS-006] Error initializing component:', error);
+        return null;
     }
 };
 
-// ENHANCED: Multiple exposure patterns for maximum compatibility
-(window as any).initWMPRRequestsTable = initWMPRRequestsTable;
-(window as any).WMPR = (window as any).WMPR || {};
-(window as any).WMPR.initWMPRRequestsTable = initWMPRRequestsTable;
-(window as any).WMPR.wmprRequestsTable = { initWMPRRequestsTable };
+// CRITICAL: Multiple exposure strategies to ensure the function is always available
+declare global {
+    interface Window {
+        initWMPRRequestsTable?: any;
+        WMPR?: any;
+        wmprRequestsTable?: any;
+    }
+}
 
-// AMD/RequireJS compatibility
-if (typeof define === 'function' && define.amd) {
-    define('wmpr-requests-table', [], function() {
-        return { initWMPRRequestsTable };
+// Immediate global exposure
+if (typeof window !== 'undefined') {
+    // Strategy 1: Direct window exposure
+    window.initWMPRRequestsTable = initWMPRRequestsTable;
+    window.wmprRequestsTable = initWMPRRequestsTable;
+    
+    // Strategy 2: WMPR namespace
+    if (!window.WMPR) {
+        window.WMPR = {};
+    }
+    window.WMPR.initWMPRRequestsTable = initWMPRRequestsTable;
+    window.WMPR.wmprRequestsTable = initWMPRRequestsTable;
+    
+    console.log('[WMPR-REQUESTS-007] Global functions exposed:', {
+        'window.initWMPRRequestsTable': typeof window.initWMPRRequestsTable,
+        'window.wmprRequestsTable': typeof window.wmprRequestsTable,
+        'window.WMPR.initWMPRRequestsTable': typeof window.WMPR?.initWMPRRequestsTable,
+        'window.WMPR.wmprRequestsTable': typeof window.WMPR?.wmprRequestsTable
     });
 }
 
-// CommonJS compatibility
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { initWMPRRequestsTable };
-}
+// Export for module systems
+export default initWMPRRequestsTable;
+export { initWMPRRequestsTable };
 
-console.log('[IKKKKKKE-MODULE-032] ===== MODULE INITIALIZATION =====');
-console.log('[IKKKKKKE-MODULE-033] Module loaded successfully');
-console.log('[IKKKKKKE-MODULE-034] initWMPRRequestsTable function exposed to window');
-console.log('[IKKKKKKE-MODULE-035] Function type check:', typeof (window as any).initWMPRRequestsTable);
-console.log('[IKKKKKKE-MODULE-036] Available globals:', Object.keys(window).filter(k => k.includes('WMPR') || k.includes('wmpr')));
-
-// Export for webpack
-export default { initWMPRRequestsTable };
-
-console.log('[IKKKKKKE-MODULE-037] Module export completed'); 
+// DIAGNOSTIC: Bundle loading verification
+console.log('[WMPR-REQUESTS-008] WMPR Requests Table bundle loaded successfully', {
+    timestamp: new Date().toISOString(),
+    React: typeof window.React,
+    ReactDOM: typeof window.ReactDOM,
+    initFunction: typeof initWMPRRequestsTable
+}); 

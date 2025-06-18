@@ -45,6 +45,9 @@ module.exports = (_, { mode }) => {
         externals: {
             'react': 'React',
             'react-dom': 'ReactDOM',
+            // CRITICAL: Add jQuery external - was missing!
+            'jquery': 'jQuery',
+            '$': 'jQuery',
             // UPDATED: More reliable AtlasKit external mappings
             '@atlaskit/button': {
                 root: ['AJS', 'AtlasKit', 'Button'],
@@ -120,6 +123,25 @@ module.exports = (_, { mode }) => {
                         'atl.general'  // General context for testing
                     ]  // Settings component for project configuration
                 },
+                // CRITICAL: Add dependencies that were missing from auto-generated resources
+                dependencies: {
+                    'wmprRequestsTable': [
+                        'com.atlassian.plugins.atlassian-plugins-webresource-plugin:context-path',
+                        'com.atlassian.auiplugin:ajs',
+                        'jira.webresources:util',
+                        'jira.webresources:jira-global',
+                        'com.atlassian.jira.plugins.jira-react-plugin:react',
+                        'com.atlassian.auiplugin:aui-experimental-atlaskit-wrapper'
+                    ],
+                    'wmprSettings': [
+                        'com.atlassian.plugins.atlassian-plugins-webresource-plugin:context-path',
+                        'com.atlassian.auiplugin:ajs',
+                        'jira.webresources:util',
+                        'jira.webresources:jira-global',
+                        'com.atlassian.jira.plugins.jira-react-plugin:react',
+                        'com.atlassian.auiplugin:aui-experimental-atlaskit-wrapper'
+                    ]
+                },
                 // Jira provides these dependencies
                 providedDependencies: {
                     'AJS': {
@@ -133,6 +155,10 @@ module.exports = (_, { mode }) => {
                     'ReactDOM': {
                         dependency: 'com.atlassian.jira.plugins.jira-react-plugin:react',
                         import: 'ReactDOM'
+                    },
+                    'jQuery': {
+                        dependency: 'jira.webresources:jira-global',
+                        import: 'jQuery'
                     }
                 }
             }),
